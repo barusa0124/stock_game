@@ -23,7 +23,7 @@
         --color-text-secondary: #6b7280; /* gray-500 */
         --color-indigo: rgb(79, 70, 229); /* indigo-600 */
         --color-green: rgb(5, 150, 105); /* green-600 */
-        --color-red: rgb(220, 38, 38); /* red-600 */
+        --color-red: rgb(220, 38, 38); /* red-red */
     }
     body {
         font-family: var(--font-family);
@@ -106,11 +106,12 @@
     }
     .combined-chart-area {
         flex-grow: 1;
-        max-width: 75%; 
+        max-width: calc(100% - 196px); /* 凡例の最大幅を考慮 */
         position: relative;
     }
     .chart-legend-wrapper {
         width: 25%;
+        min-width: 180px;
         max-width: 180px;
         border-left: 1px solid var(--color-border);
         padding-left: 0.75rem; /* pl-3 */
@@ -206,6 +207,7 @@
       const HISTORY_MINUTES = 10; // グラフ表示の履歴期間 (N分間)
       const EVENT_HISTORY_COUNT = 3; // イベント履歴の表示件数 (n件)
       const LOCAL_STORAGE_KEY = 'active_stocks'; // LocalStorageキー
+      const JSON_FILE_URL = './stock_schedule.json'; // ★★★ 外部JSONファイルを参照 ★★★
 
       let pricesSchedule = []; 
       let eventsSchedule = []; 
@@ -224,28 +226,6 @@
           "エネルギー": "rgb(168, 85, 247)" 
       };
       
-      // --- デモデータ: 現在時刻より5分前を基準に設定 ---
-      const BASE_TIME = new Date(new Date().getTime() - (5 * 60 * 1000));
-      
-      // デモスケジュール
-      pricesSchedule = [
-          { "time_absolute_iso": new Date(BASE_TIME.getTime()).toISOString(), "prices": [{"name": "金融", "price": 1000}, {"name": "ヘルスケア", "price": 2500}, {"name": "情報・通信", "price": 850}, {"name": "インフラ・公共事業", "price": 1200}, {"name": "不動産", "price": 400}, {"name": "生活必需品", "price": 900}, {"name": "化学・素材", "price": 3200}, {"name": "エネルギー", "price": 1500}] },
-          { "time_absolute_iso": new Date(BASE_TIME.getTime() + (90 * 1000)).toISOString(), "prices": [{"name": "金融", "price": 1050}, {"name": "ヘルスケア", "price": 2500}, {"name": "情報・通信", "price": 850}, {"name": "インフラ・公共事業", "price": 1200}, {"name": "不動産", "price": 350}, {"name": "生活必需品", "price": 900}, {"name": "化学・素材", "price": 3150}, {"name": "エネルギー", "price": 1500}] },
-          { "time_absolute_iso": new Date(BASE_TIME.getTime() + (180 * 1000)).toISOString(), "prices": [{"name": "金融", "price": 1050}, {"name": "ヘルスケア", "price": 2500}, {"name": "情報・通信", "price": 1000}, {"name": "インフラ・公共事業", "price": 1200}, {"name": "不動産", "price": 350}, {"name": "生活必需品", "price": 900}, {"name": "化学・素材", "price": 3150}, {"name": "エネルギー", "price": 1500}] },
-          { "time_absolute_iso": new Date(BASE_TIME.getTime() + (330 * 1000)).toISOString(), "prices": [{"name": "金融", "price": 1050}, {"name": "ヘルスケア", "price": 2550}, {"name": "情報・通信", "price": 950}, {"name": "インフラ・公共事業", "price": 1200}, {"name": "不動産", "price": 350}, {"name": "生活必需品", "price": 950}, {"name": "化学・素材", "price": 2800}, {"name": "エネルギー", "price": 1400}] },
-          { "time_absolute_iso": new Date(BASE_TIME.getTime() + (480 * 1000)).toISOString(), "prices": [{"name": "金融", "price": 1100}, {"name": "ヘルスケア", "price": 2600}, {"name": "情報・通信", "price": 1100}, {"name": "インフラ・公共事業", "price": 1250}, {"name": "不動産", "price": 450}, {"name": "生活必需品", "price": 1000}, {"name": "化学・素材", "price": 2900}, {"name": "エネルギー", "price": 1500}] },
-          { "time_absolute_iso": new Date(BASE_TIME.getTime() + (630 * 1000)).toISOString(), "prices": [{"name": "金融", "price": 1200}, {"name": "ヘルスケア", "price": 2400}, {"name": "情報・通信", "price": 1200}, {"name": "インフラ・公共事業", "price": 1300}, {"name": "不動産", "price": 500}, {"name": "生活必需品", "price": 950}, {"name": "化学・素材", "price": 3000}, {"name": "エネルギー", "price": 1600}]}
-      ];
-
-      eventsSchedule = [
-          {"time_absolute_iso": new Date(BASE_TIME.getTime()).toISOString(), "event_title": "ゲーム開始: 初期価格設定"},
-          {"time_absolute_iso": new Date(BASE_TIME.getTime() + (90 * 1000)).toISOString(), "event_title": "中央銀行が金利を緊急引き上げ（イベント1）"},
-          {"time_absolute_iso": new Date(BASE_TIME.getTime() + (180 * 1000)).toISOString(), "event_title": "革新的なAIチップが発表される（イベント6）"},
-          {"time_absolute_iso": new Date(BASE_TIME.getTime() + (330 * 1000)).toISOString(), "event_title": "世界的な景気後退入り（イベント2）"},
-          {"time_absolute_iso": new Date(BASE_TIME.getTime() + (480 * 1000)).toISOString(), "event_title": "重要鉱物（レアメタル）の国内資源開発成功（イベント43）"},
-          {"time_absolute_iso": new Date(BASE_TIME.getTime() + (630 * 1000)).toISOString(), "event_title": "次のイベント予定: 新技術の発表"}
-      ];
-
       // --- UTILITY FUNCTIONS ---
       
       /**
@@ -253,18 +233,22 @@
        */
       function getYAxisScale(minPrice, maxPrice) {
           const range = maxPrice - minPrice;
-          if (range <= 0) { // 価格変動がない場合
-              const center = minPrice;
-              return { scaleMin: center - 50, scaleMax: center + 50 };
+          if (range <= 0 || !isFinite(range)) { // 価格変動がない、またはデータがない場合
+              const center = minPrice || 1000; // データがない場合はデフォルト値
+              // 軸の変動幅を確保
+              const interval = Math.max(100, Math.floor(center * 0.05));
+              return { scaleMin: center - interval, scaleMax: center + interval };
           }
           
+          // キリの良い間隔を計算
           let niceInterval = 1;
           const roughInterval = range / 5; // 約5つの目盛り
           const power = Math.pow(10, Math.floor(Math.log10(roughInterval)));
           
           if (roughInterval > 5 * power) niceInterval = 10 * power;
           else if (roughInterval > 2 * power) niceInterval = 5 * power;
-          else niceInterval = 2 * power;
+          else if (roughInterval > 1 * power) niceInterval = 2 * power;
+          else niceInterval = 1 * power;
           
           const scaleMin = Math.floor(minPrice / niceInterval) * niceInterval;
           const scaleMax = Math.ceil(maxPrice / niceInterval) * niceInterval;
@@ -282,7 +266,7 @@
           
           if (stockChart) {
               // 既にインスタンスが存在する場合はデータを更新
-              stockChart.data = chartData;
+              stockChart.data.datasets = chartData.datasets;
               stockChart.options.scales.y.min = scaleMin;
               stockChart.options.scales.y.max = scaleMax;
               stockChart.options.scales.x.min = Date.now() - chartRangeMs;
@@ -309,7 +293,7 @@
                           type: 'time',
                           time: {
                               unit: 'minute',
-                              displayFormats: { minute: 'H:mm' }
+                              displayFormats: { minute: 'H:mm:ss' } // 秒単位まで表示
                           },
                           min: Date.now() - chartRangeMs, // グラフの左端 (現在時刻 - 10分)
                           max: Date.now(), // グラフの右端 (現在時刻)
@@ -335,66 +319,7 @@
           });
           
           // 初回ロード時、凡例のチェック状態を反映
-          stockChart.data.datasets.forEach((ds, index) => {
-             stockChart.setDatasetVisibility(index, ACTIVE_STOCKS.has(ds.label));
-          });
           stockChart.update();
-      }
-
-      /**
-       * グラフのX軸/Y軸データをChart.js形式に変換し、更新をトリガーする
-       */
-      function updateChartData() {
-          const now = Date.now();
-          const historyMs = HISTORY_MINUTES * 60 * 1000;
-          
-          // 1. フィルタリングされた履歴データを取得
-          const filteredHistory = pricesSchedule.filter(entry => 
-              entry.time_date.getTime() >= (now - historyMs) && entry.time_date.getTime() <= now
-          );
-
-          if (filteredHistory.length === 0) {
-              const container = document.getElementById('chart-container-wrapper');
-              if (stockChart) { stockChart.destroy(); stockChart = null; } 
-              container.innerHTML = '<p class="text-center text-gray-500 py-10">表示する履歴データがありません。</p>';
-              return;
-          }
-          
-          // 2. 全銘柄の最小・最大価格を特定
-          let allPrices = filteredHistory.flatMap(entry => entry.prices.map(p => p.price));
-          let minPrice = Math.min(...allPrices);
-          let maxPrice = Math.max(...allPrices);
-          
-          // 3. Y軸スケールをキリの良い数字に設定
-          const { scaleMin, scaleMax } = getYAxisScale(minPrice, maxPrice);
-
-          // 4. データセットを構築 (チェック状態をhiddenに反映)
-          const stockNames = pricesSchedule.length > 0 ? pricesSchedule[0].prices.map(p => p.name) : [];
-          const datasets = stockNames.map(name => {
-              const dataPoints = filteredHistory.map(entry => {
-                  const priceEntry = entry.prices.find(p => p.name === name);
-                  return {
-                      x: entry.time_date.getTime(), // Chart.jsではミリ秒で渡す
-                      y: priceEntry ? priceEntry.price : null 
-                  };
-              });
-
-              return {
-                  label: name,
-                  data: dataPoints,
-                  borderColor: STOCK_COLORS[name],
-                  backgroundColor: STOCK_COLORS[name],
-                  borderWidth: 2,
-                  pointRadius: 3,
-                  fill: false,
-                  tension: 0,
-                  // LocalStorageから読み込んだ状態を hidden に反映
-                  hidden: !ACTIVE_STOCKS.has(name) 
-              };
-          });
-
-          const chartData = { datasets };
-          initializeChart(chartData, scaleMin, scaleMax, historyMs);
       }
 
       /**
@@ -424,23 +349,27 @@
               // イベントリスナーの追加
               legendItem.querySelector('input').addEventListener('change', (e) => {
                   const name = e.target.dataset.stockName;
-                  if (e.target.checked) {
+                  const isChecked = e.target.checked;
+                  
+                  if (isChecked) {
                       ACTIVE_STOCKS.add(name);
                   } else {
                       ACTIVE_STOCKS.delete(name);
                   }
+                  
                   // LocalStorageに保存
                   saveActiveStocks(ACTIVE_STOCKS); 
 
-                  // グラフの表示/非表示を切り替える
+                  // グラフの表示/非表示を切り替え、Y軸を再計算
                   if (stockChart) {
                       const datasetIndex = stockChart.data.datasets.findIndex(ds => ds.label === name);
                       if (datasetIndex > -1) {
-                          // Chart.jsのAPIではなく、hiddenフラグを直接操作
-                          stockChart.data.datasets[datasetIndex].hidden = !e.target.checked;
-                          stockChart.update();
+                          // Chart.jsの hidden プロパティを更新
+                          stockChart.data.datasets[datasetIndex].hidden = !isChecked;
                       }
                   }
+                  // グラフの描画データを更新し、Y軸を再計算
+                  updateChartData();
               });
           });
       }
@@ -459,7 +388,8 @@
           
           // イベント履歴の表示件数 (EVENT_HISTORY_COUNT) に制限
           events.slice(0, EVENT_HISTORY_COUNT).forEach(event => {
-              const time = event.time_date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+              // 時刻を秒単位まで表示
+              const time = event.time_date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
               const listItem = document.createElement('li');
               listItem.className = 'border-l-4 border-indigo-400 pl-3 text-gray-700';
               listItem.innerHTML = `
@@ -469,9 +399,9 @@
               list.appendChild(listItem);
           });
       }
-      
+
       /**
-       * 取得したデータに基づいてHTMLを更新する (銘柄カードの描画)
+       * 銘柄カードの描画
        */
       function updateDisplay(currentPrices, previousPrices, recentEvents) {
         const board = document.getElementById('price-board');
@@ -500,7 +430,8 @@
           if (!existingElement) {
               const newDiv = document.createElement('div');
               newDiv.id = priceId;
-              newDiv.className = "card bg-white p-5 rounded-xl border border-gray-200 hover:border-indigo-400 transition duration-150 flex flex-col justify-center";
+              // ★★★ 銘柄カードの均等化 CSS クラス ★★★
+              newDiv.className = "card bg-white p-5 rounded-xl border border-gray-200 hover:border-indigo-400 transition duration-150 flex flex-col justify-center"; 
               newDiv.innerHTML = `
                   <h2 class="text-xl font-semibold text-gray-600 mb-2">${item.name}</h2>
                   <div class="price-details">
@@ -542,6 +473,69 @@
         document.getElementById('last-updated').textContent = new Date().toLocaleTimeString('ja-JP');
       }
 
+      /**
+       * グラフのX軸/Y軸データをChart.js形式に変換し、更新をトリガーする (CORE)
+       */
+      function updateChartData() {
+          const now = Date.now();
+          const historyMs = HISTORY_MINUTES * 60 * 1000;
+          
+          // 1. フィルタリングされた履歴データを取得
+          const filteredHistory = pricesSchedule.filter(entry => 
+              entry.time_date.getTime() >= (now - historyMs) && entry.time_date.getTime() <= now
+          );
+
+          if (filteredHistory.length === 0) {
+              const container = document.getElementById('chart-container-wrapper');
+              // データがない場合は、グラフを破壊してメッセージを表示
+              if (stockChart) { stockChart.destroy(); stockChart = null; } 
+              if (container.querySelector('canvas')) container.querySelector('canvas').remove();
+              // 新しいキャンバスを再構築
+              container.innerHTML = '<canvas id="combined-chart"></canvas><p class="text-center text-gray-500 py-10">表示する履歴データがありません。</p>';
+              return;
+          }
+
+          // 2. 表示対象の銘柄（ACTIVE_STOCKS）の最小・最大価格を特定
+          let activePrices = filteredHistory.flatMap(entry => entry.prices
+              .filter(p => ACTIVE_STOCKS.has(p.name))
+              .map(p => p.price)
+          );
+          
+          let minPrice = activePrices.length > 0 ? Math.min(...activePrices) : 0;
+          let maxPrice = activePrices.length > 0 ? Math.max(...activePrices) : 100;
+          
+          // 3. Y軸スケールをキリの良い数字に設定
+          const { scaleMin, scaleMax } = getYAxisScale(minPrice, maxPrice);
+
+          // 4. データセットを構築 (チェック状態をhiddenに反映)
+          const stockNames = pricesSchedule.length > 0 ? pricesSchedule[0].prices.map(p => p.name) : [];
+          const datasets = stockNames.map(name => {
+              const dataPoints = filteredHistory.map(entry => {
+                  const priceEntry = entry.prices.find(p => p.name === name);
+                  return {
+                      x: entry.time_date.getTime(), // Chart.jsではミリ秒で渡す
+                      y: priceEntry ? priceEntry.price : null 
+                  };
+              });
+
+              return {
+                  label: name,
+                  data: dataPoints,
+                  borderColor: STOCK_COLORS[name],
+                  backgroundColor: STOCK_COLORS[name],
+                  borderWidth: 2,
+                  pointRadius: 3,
+                  fill: false,
+                  tension: 0.1,
+                  // LocalStorageから読み込んだ状態を hidden に反映
+                  hidden: !ACTIVE_STOCKS.has(name) 
+              };
+          });
+
+          const chartData = { datasets };
+          initializeChart(chartData, scaleMin, scaleMax, historyMs);
+      }
+      
       // --- LocalStorage Utility Functions ---
       
       /**
@@ -577,85 +571,51 @@
       }
 
       /**
-       * デモデータをロードし、初期化する (メイン)
+       * 外部JSONファイルを読み込み、初期化する (メイン)
        */
-      function loadSchedule() {
+      async function loadSchedule() {
         const loadingElement = document.getElementById('loading');
         
-        // ISO文字列をDateオブジェクトに変換し、ソートする
-        [pricesSchedule, eventsSchedule].forEach(schedule => {
-            schedule.forEach(entry => {
-                entry.time_date = new Date(entry.time_absolute_iso);
-            });
-            schedule.sort((a, b) => a.time_date.getTime() - b.time_date.getTime()); 
-        });
-        
-        // ロード完了
-        if (loadingElement) loadingElement.remove();
-        
-        const allStockNames = pricesSchedule.length > 0 ? pricesSchedule[0].prices.map(p => p.name) : [];
-        
-        // 状態を読み込み、凡例を描画
-        loadActiveStocks(allStockNames); 
-        drawLegend(allStockNames); 
-
-        checkAndUpdate();
-        setInterval(checkAndUpdate, UPDATE_INTERVAL);
-      }
-
-
-      /**
-       * 現在時刻に基づいて表示を更新するメインロジック (CORE)
-       */
-      function checkAndUpdate() {
-        if (pricesSchedule.length === 0) return; 
-        
-        const now = new Date();
-        
-        let latestPriceData = null;
-        let previousPriceData = null;
-        let recentPriceHistory = [];
-        
-        // 価格スケジュール全体をループし、過去のデータを保持
-        const historyStartMs = now.getTime() - (HISTORY_MINUTES * 60 * 1000);
-
-        for (let i = 0; i < pricesSchedule.length; i++) {
-          const priceEntry = pricesSchedule[i];
-          const timeMs = priceEntry.time_date.getTime();
-          
-          // 直近N分間の履歴抽出
-          if (timeMs >= historyStartMs && timeMs <= now.getTime()) {
-              recentPriceHistory.push(priceEntry);
-          }
-
-          // 最新の価格特定
-          if (timeMs <= now.getTime()) {
-            previousPriceData = latestPriceData;
-            latestPriceData = priceEntry.prices;
-          } else {
-            break; 
-          }
-        }
-
-        // 2. イベント履歴の特定
-        const recentEvents = [];
-        for (let i = eventsSchedule.length - 1; i >= 0; i--) {
-            const eventEntry = eventsSchedule[i];
-            if (eventEntry.time_date.getTime() <= now.getTime()) {
-                recentEvents.push(eventEntry);
-                if (recentEvents.length >= EVENT_HISTORY_COUNT) break;
+        try {
+            loadingElement.textContent = 'スケジュールデータをダウンロード中...';
+            const response = await fetch(JSON_FILE_URL);
+            
+            if (!response.ok) {
+                throw new Error(`ファイルアクセスエラー: JSONファイルの読み込みに失敗しました (${response.status} ${response.statusText})。`);
             }
-        }
+            
+            const data = await response.json();
+            
+            // JSONの形式が {prices_schedule: [...], events_schedule: [...]} であることを想定
+            pricesSchedule = data.prices_schedule;
+            eventsSchedule = data.events_schedule;
         
-        // 4. 画面表示の更新
-        if (latestPriceData) {
-            updateDisplay(latestPriceData, previousPriceData, recentEvents);
-            // 統合グラフの描画
-            updateChartData(); // Chart.jsの更新関数を呼び出す
-        } else {
-            // ゲーム開始前
-            document.getElementById('price-board').innerHTML = '<div class="col-span-1 md:col-span-2 text-center text-gray-500 py-10">ゲーム開始時刻までお待ちください。</div>';
-            updateEventHistory([]);
+            // ISO文字列をDateオブジェクトに変換し、ソートする
+            [pricesSchedule, eventsSchedule].forEach(schedule => {
+                schedule.forEach(entry => {
+                    entry.time_date = new Date(entry.time_absolute_iso);
+                });
+                schedule.sort((a, b) => a.time_date.getTime() - b.time_date.getTime()); 
+            });
+            
+            // ロード完了
+            if (loadingElement) loadingElement.remove();
+            
+            const allStockNames = pricesSchedule.length > 0 ? pricesSchedule[0].prices.map(p => p.name) : [];
+            
+            // 状態を読み込み、凡例を描画
+            loadActiveStocks(allStockNames); 
+            drawLegend(allStockNames); 
+
+            checkAndUpdate();
+            setInterval(checkAndUpdate, UPDATE_INTERVAL);
+
+        } catch (error) {
+            // エラーメッセージをユーザーに表示
+            loadingElement.textContent = `❌ データロードエラー: ${error.message}. コンソールを確認してください。`;
+            loadingElement.classList.remove('text-gray-500');
+            loadingElement.classList.add('text-red-500', 'font-bold');
+            console.error("致命的なロードエラー:", error);
         }
       }
       
