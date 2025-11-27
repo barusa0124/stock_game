@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Chart.jsライブラリのインポート -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <!-- ★★★ 修正点: 時刻スケール用アダプターの追加 ★★★ -->
+  <!-- 時刻スケール用アダプターの追加 -->
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -55,6 +55,11 @@
         margin-bottom: 4px;
         cursor: pointer;
     }
+    /* ★★★ 修正点2: Grid内の要素の高さと余白を統一 ★★★ */
+    #price-board > div {
+        margin-top: 0; 
+        margin-bottom: 0;
+    }
   </style>
 </head>
 <body class="p-4 sm:p-8">
@@ -98,6 +103,7 @@
       <!-- 3. 株価表示エリア (銘柄別カード) -->
       <div class="lg:col-span-2 space-y-4">
         <h2 class="text-xl font-bold text-gray-800 mb-3 border-b pb-2">全銘柄の現在価格と変動</h2>
+        <!-- ★★★ 修正点2: グリッドコンテナの余白を制御 ★★★ -->
         <div id="price-board" class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div id="loading" class="col-span-1 md:col-span-2 text-center text-gray-500 py-10">
             データを読み込み中...
@@ -114,6 +120,7 @@
       const UPDATE_INTERVAL = 5000; // 5秒ごとにチェック (ミリ秒)
       const HISTORY_MINUTES = 10; // グラフ表示の履歴期間 (N分間)
       const EVENT_HISTORY_COUNT = 3; // イベント履歴の表示件数 (n件)
+      const LOCAL_STORAGE_KEY = 'active_stocks'; // LocalStorageキー
 
       let pricesSchedule = []; 
       let eventsSchedule = []; 
@@ -135,7 +142,8 @@
       // --- デモデータ: 現在時刻より5分前を基準に設定 ---
       const BASE_TIME = new Date(new Date().getTime() - (5 * 60 * 1000));
       
-      // デモスケジュール
+      // デモスケジュール (データは省略、ファイルを参照)
+
       pricesSchedule = [
           { "time_absolute_iso": new Date(BASE_TIME.getTime()).toISOString(), "prices": [{"name": "金融", "price": 1000}, {"name": "ヘルスケア", "price": 2500}, {"name": "情報・通信", "price": 850}, {"name": "インフラ・公共事業", "price": 1200}, {"name": "不動産", "price": 400}, {"name": "生活必需品", "price": 900}, {"name": "化学・素材", "price": 3200}, {"name": "エネルギー", "price": 1500}] },
           { "time_absolute_iso": new Date(BASE_TIME.getTime() + (90 * 1000)).toISOString(), "prices": [{"name": "金融", "price": 1050}, {"name": "ヘルスケア", "price": 2500}, {"name": "情報・通信", "price": 850}, {"name": "インフラ・公共事業", "price": 1200}, {"name": "不動産", "price": 350}, {"name": "生活必需品", "price": 900}, {"name": "化学・素材", "price": 3150}, {"name": "エネルギー", "price": 1500}] },
@@ -336,6 +344,9 @@
                   } else {
                       ACTIVE_STOCKS.delete(name);
                   }
+                  // ★★★ 修正点1.1: LocalStorageに保存 ★★★
+                  saveActiveStocks(ACTIVE_STOCKS); 
+
                   // チェックボックスの状態が変わったら、グラフを再描画
                   if (stockChart) {
                       const datasetIndex = stockChart.data.datasets.findIndex(ds => ds.label === name);
@@ -403,7 +414,8 @@
           if (!existingElement) {
               const newDiv = document.createElement('div');
               newDiv.id = priceId;
-              newDiv.className = "card bg-white p-5 rounded-xl border border-gray-200 hover:border-indigo-400 transition duration-150";
+              // ★★★ 修正点2.1: 縦幅均一化のため flex を使用 ★★★
+              newDiv.className = "card bg-white p-5 rounded-xl border border-gray-200 hover:border-indigo-400 transition duration-150 flex flex-col justify-center";
               newDiv.innerHTML = `
                   <h2 class="text-xl font-semibold text-gray-600 mb-2">${item.name}</h2>
                   <div class="flex items-end justify-between mb-3">
@@ -445,6 +457,40 @@
         document.getElementById('last-updated').textContent = new Date().toLocaleTimeString('ja-JP');
       }
 
+      // --- LocalStorage Utility Functions ---
+      
+      /**
+       * ★★★ 修正点1.2: LocalStorageからアクティブな銘柄を読み込む ★★★
+       */
+      function loadActiveStocks(allStockNames) {
+          const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+          if (stored) {
+              try {
+                  const storedArray = JSON.parse(stored);
+                  if (Array.isArray(storedArray)) {
+                      ACTIVE_STOCKS = new Set(storedArray);
+                      return;
+                  }
+              } catch (e) {
+                  console.error("Failed to parse stored active stocks:", e);
+              }
+          }
+          
+          // 初回またはデータ不正の場合、全てアクティブにする
+          allStockNames.forEach(name => ACTIVE_STOCKS.add(name));
+      }
+
+      /**
+       * ★★★ 修正点1.3: LocalStorageにアクティブな銘柄を保存する ★★★
+       */
+      function saveActiveStocks(activeSet) {
+          try {
+              localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(Array.from(activeSet)));
+          } catch (e) {
+              console.error("Failed to save active stocks:", e);
+          }
+      }
+
       /**
        * デモデータをロードし、初期化する (メイン)
        */
@@ -462,11 +508,10 @@
         // ロード完了
         if (loadingElement) loadingElement.remove();
         
-        // 初期描画時、全ての銘柄をACTIVE_STOCKSに追加（デフォルトで全て表示）
         const allStockNames = pricesSchedule.length > 0 ? pricesSchedule[0].prices.map(p => p.name) : [];
-        allStockNames.forEach(name => ACTIVE_STOCKS.add(name)); 
         
-        // 凡例の初期描画
+        // ★★★ 修正点1.4: 状態を読み込み、凡例を描画 ★★★
+        loadActiveStocks(allStockNames); 
         drawLegend(allStockNames); 
 
         checkAndUpdate();
