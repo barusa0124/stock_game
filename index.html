@@ -152,7 +152,7 @@
 <body class="p-4 sm:p-8">
   <div class="max-w-6xl mx-auto">
     <header class="text-center mb-8">
-      <h1 class="text-3xl font-extrabold text-indigo-700 mb-2">ゲーム内株価一覧</h1>
+      <h1 class="text-3xl font-extrabold text-indigo-700 mb-2">株価情報</h1>
       <p class="text-sm text-gray-500">
         最終読み込み時刻: <span id="last-updated" class="font-medium">--</span>
       </p>
@@ -160,7 +160,7 @@
     
     <!-- 1. 全銘柄の統合株価グラフエリア -->
     <div class="card bg-white p-6 rounded-xl border border-gray-200 shadow-xl mb-8">
-        <h2 class="text-xl font-bold text-gray-800 mb-2 border-b pb-2">直近10分間の株価推移（全銘柄）</h2>
+        <h2 class="text-xl font-bold text-gray-800 mb-2 border-b pb-2">株価推移</h2>
         
         <div class="chart-container-wrapper">
             <!-- グラフ本体 (左側) -->
@@ -181,7 +181,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
       <!-- 2. 直近イベント履歴エリア -->
       <div id="event-history" class="lg:col-span-1 card bg-white p-6 rounded-xl border border-gray-200">
-        <h2 class="text-xl font-bold text-gray-800 mb-3 border-b pb-2">直近のイベント履歴 (3件)</h2>
+        <h2 class="text-xl font-bold text-gray-800 mb-3 border-b pb-2">直近のイベント履歴</h2>
         <ul id="event-list" class="space-y-3 text-sm">
           <!-- イベントがここに挿入されます -->
         </ul>
@@ -189,7 +189,7 @@
 
       <!-- 3. 株価表示エリア (銘柄別カード) -->
       <div class="lg:col-span-2 space-y-4">
-        <h2 class="text-xl font-bold text-gray-800 mb-3 border-b pb-2">全銘柄の現在価格と変動</h2>
+        <h2 class="text-xl font-bold text-gray-800 mb-3 border-b pb-2">各銘柄の現在の株価と変動</h2>
         <div id="price-board" class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div id="loading" class="col-span-1 md:col-span-2 text-center text-gray-500 py-10">
             データを読み込み中...
