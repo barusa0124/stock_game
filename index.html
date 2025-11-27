@@ -48,7 +48,7 @@
     // IIFEで全体をラッピングし、スコープを隔離
     (function() {
       
-      const JSON_FILE_URL = './stock_schedule.json';
+      const JSON_FILE_URL = './stock_schedule.json'; // 外部JSONファイルを参照
       const UPDATE_INTERVAL = 5000; // 5秒ごとにチェック (ミリ秒)
 
       let gameSchedule = [];
@@ -65,16 +65,22 @@
           const response = await fetch(JSON_FILE_URL);
           
           if (!response.ok) {
-            // HTTPステータスが200番台でなかった場合（例: 404 Not Found）
-            throw new Error(`ファイルアクセスエラー: JSONファイルの読み込みに失敗しました (${response.status})。ファイルパスを確認してください。`);
+            throw new Error(`ファイルアクセスエラー: JSONファイルの読み込みに失敗しました (${response.status} ${response.statusText})。`);
           }
+          
+          // ----------------------------------------------------
+          // ★★★ デバッグのために生のテキストデータを取得 ★★★
+          // ----------------------------------------------------
+          const rawText = await response.text();
+          console.log("【デバッグ】受信した生のテキストデータ:", rawText); 
           
           let data;
           try {
-            data = await response.json();
+            data = JSON.parse(rawText);
           } catch (e) {
-             // JSONパースエラー
-             throw new Error('JSONパースエラー: stock_schedule.jsonの形式が不正です。コンマや引用符を確認してください。');
+             // パース失敗時、エラーの詳細をコンソールに出力
+             console.error("【致命的エラー】JSONパース失敗:", e);
+             throw new Error('JSONパースエラー: stock_schedule.jsonの内容を解析できませんでした。コンソールで「Received text content」を確認してください。');
           }
           
           gameSchedule = data;
@@ -126,7 +132,6 @@
             latestEventTime = event.time_date;
           } else {
             // 次のイベントが未発生の場合、ループを終了
-            // latestPriceDataには、この手前のデータが格納されている
             break; 
           }
         }
@@ -137,7 +142,7 @@
             // ゲーム進行中
             statusElement.textContent = 'ゲーム進行中';
             eventElement.textContent = latestEventTitle;
-            updateDisplay(latestPriceData);
+            updateDisplay(latestPriceData, latestEventTitle);
             
             // 次のイベント時刻までの残り時間を計算し表示
             const nextEvent = gameSchedule.find(event => event.time_date.getTime() > now.getTime());
@@ -154,8 +159,8 @@
             
         } else {
             // まだ最初のイベント時刻に到達していない
-            const firstEventTime = gameSchedule[0].time_date;
-            if (firstEventTime.getTime() > now.getTime()) {
+            const firstEventTime = gameSchedule[0]?.time_date;
+            if (firstEventTime && firstEventTime.getTime() > now.getTime()) {
                 const timeRemainingMs = firstEventTime.getTime() - now.getTime();
                 const totalSeconds = Math.round(timeRemainingMs / 1000);
                 const minutes = Math.floor(totalSeconds / 60);
@@ -164,7 +169,7 @@
                 statusElement.textContent = `ゲーム開始まで: ${minutes}分${seconds}秒`;
                 eventElement.textContent = '初期化待ち';
             } else {
-                // スケジュールにデータがない
+                // スケジュールにデータがない、または最初のイベント時刻が既に過去だがデータが見つからない
                 document.getElementById('price-board').innerHTML = '<div class="col-span-1 md:col-span-2 text-center text-gray-500 py-10">表示可能な株価データがありません。</div>';
             }
         }
@@ -173,14 +178,20 @@
       /**
        * 取得したデータに基づいてHTMLを更新する
        */
-      function updateDisplay(prices) {
+      function updateDisplay(prices, eventTitle) {
         const board = document.getElementById('price-board');
-        const eventElement = document.getElementById('current-event'); // 再取得
+        const eventElement = document.getElementById('current-event');
+
+        // イベントタイトルを更新
         eventElement.textContent = eventTitle;
         
+        // HTML要素がまだボード内に存在しない場合は、一度全てクリアして再構築
+        if (board.children.length === 0 || board.children[0].id === 'loading') {
+             board.innerHTML = '';
+          }
+
         prices.forEach(item => {
           const formattedPrice = item.price.toLocaleString();
-          // 日本語の銘柄名を含むため、ID生成ロジックは維持
           const safeName = item.name.replace(/[^a-zA-Z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/g, ''); 
           const priceId = `price-${safeName}`;
 
@@ -200,6 +211,7 @@
           
           const priceSpan = existingElement.querySelector('p');
           if (priceSpan && priceSpan.textContent !== `¥ ${formattedPrice}`) {
+              // 価格が変更された場合のみアニメーション
               priceSpan.classList.add('animate-pulse-once');
               priceSpan.textContent = `¥ ${formattedPrice}`;
               setTimeout(() => priceSpan.classList.remove('animate-pulse-once'), 1000); 
