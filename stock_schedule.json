@@ -1,72 +1,93 @@
 [
   {
-    "time_absolute_iso": "2025-11-27T06:24:00+00:00",
-    "event_title": "ゲーム開始: 初期価格設定",
-    "prices": [
-      {"name": "金融", "price": 1000},
-      {"name": "ヘルスケア", "price": 2500},
-      {"name": "情報・通信", "price": 850},
-      {"name": "インフラ・公共事業", "price": 1200},
-      {"name": "不動産", "price": 400},
-      {"name": "生活必需品", "price": 900},
-      {"name": "化学・素材", "price": 3200},
-      {"name": "エネルギー", "price": 1500}
-    ]
-  },
-  {
-    "time_absolute_iso": "2025-11-27T06:25:30+00:00",
-    "event_title": "イベント発生: 中央銀行が金利を緊急引き上げ（イベント1）",
-    "prices": [
-      {"name": "金融", "price": 1050},
-      {"name": "ヘルスケア", "price": 2500},
-      {"name": "情報・通信", "price": 850},
-      {"name": "インフラ・公共事業", "price": 1200},
-      {"name": "不動産", "price": 350},
-      {"name": "生活必需品", "price": 900},
-      {"name": "化学・素材", "price": 3150},
-      {"name": "エネルギー", "price": 1500}
-    ]
-  },
-  {
-    "time_absolute_iso": "2025-11-27T06:27:00+00:00",
-    "event_title": "イベント発生: 革新的なAIチップが発表される（イベント6）",
-    "prices": [
-      {"name": "金融", "price": 1050},
-      {"name": "ヘルスケア", "price": 2500},
-      {"name": "情報・通信", "price": 1000},
-      {"name": "インフラ・公共事業", "price": 1200},
-      {"name": "不動産", "price": 350},
-      {"name": "生活必需品", "price": 900},
-      {"name": "化学・素材", "price": 3150},
-      {"name": "エネルギー", "price": 1500}
-    ]
-  },
-  {
-    "time_absolute_iso": "2025-11-27T06:29:30+00:00",
-    "event_title": "イベント発生: 世界的な景気後退入り（イベント2）",
-    "prices": [
-      {"name": "金融", "price": 1050},
-      {"name": "ヘルスケア", "price": 2550},
-      {"name": "情報・通信", "price": 950},
-      {"name": "インフラ・公共事業", "price": 1200},
-      {"name": "不動産", "price": 350},
-      {"name": "生活必需品", "price": 950},
-      {"name": "化学・素材", "price": 2800},
-      {"name": "エネルギー", "price": 1400}
-    ]
-  },
-  {
-    "time_absolute_iso": "2025-11-27T06:31:30+00:00",
-    "event_title": "次のイベント予定: 新技術の発表",
-    "prices": [
-      {"name": "金融", "price": 1050},
-      {"name": "ヘルスケア", "price": 2550},
-      {"name": "情報・通信", "price": 950},
-      {"name": "インフラ・公共事業", "price": 1200},
-      {"name": "不動産", "price": 350},
-      {"name": "生活必需品", "price": 950},
-      {"name": "化学・素材", "price": 2800},
-      {"name": "エネルギー", "price": 1400}
+    "prices_schedule": [
+      {
+        "time_absolute_iso": "2025-11-27T06:24:00+00:00",
+        "prices": [
+          {"name": "金融", "price": 1000},
+          {"name": "ヘルスケア", "price": 2500},
+          {"name": "情報・通信", "price": 850},
+          {"name": "インフラ・公共事業", "price": 1200},
+          {"name": "不動産", "price": 400},
+          {"name": "生活必需品", "price": 900},
+          {"name": "化学・素材", "price": 3200},
+          {"name": "エネルギー", "price": 1500}
+        ]
+      },
+      {
+        "time_absolute_iso": "2025-11-27T06:25:30+00:00",
+        "prices": [
+          {"name": "金融", "price": 1050},
+          {"name": "ヘルスケア", "price": 2500},
+          {"name": "情報・通信", "price": 850},
+          {"name": "インフラ・公共事業", "price": 1200},
+          {"name": "不動産", "price": 350},
+          {"name": "生活必需品", "price": 900},
+          {"name": "化学・素材", "price": 3150},
+          {"name": "エネルギー", "price": 1500}
+        ]
+      },
+      {
+        "time_absolute_iso": "2025-11-27T06:27:00+00:00",
+        "prices": [
+          {"name": "金融", "price": 1050},
+          {"name": "ヘルスケア", "price": 2500},
+          {"name": "情報・通信", "price": 1000},
+          {"name": "インフラ・公共事業", "price": 1200},
+          {"name": "不動産", "price": 350},
+          {"name": "生活必需品", "price": 900},
+          {"name": "化学・素材", "price": 3150},
+          {"name": "エネルギー", "price": 1500}
+        ]
+      },
+      {
+        "time_absolute_iso": "2025-11-27T06:29:30+00:00",
+        "prices": [
+          {"name": "金融", "price": 1050},
+          {"name": "ヘルスケア", "price": 2550},
+          {"name": "情報・通信", "price": 950},
+          {"name": "インフラ・公共事業", "price": 1200},
+          {"name": "不動産", "price": 350},
+          {"name": "生活必需品", "price": 950},
+          {"name": "化学・素材", "price": 2800},
+          {"name": "エネルギー", "price": 1400}
+        ]
+      },
+      {
+        "time_absolute_iso": "2025-11-27T06:31:30+00:00",
+        "prices": [
+          {"name": "金融", "price": 1050},
+          {"name": "ヘルスケア", "price": 2550},
+          {"name": "情報・通信", "price": 950},
+          {"name": "インフラ・公共事業", "price": 1200},
+          {"name": "不動産", "price": 350},
+          {"name": "生活必需品", "price": 950},
+          {"name": "化学・素材", "price": 2800},
+          {"name": "エネルギー", "price": 1400}
+        ]
+      }
+    ],
+    "events_schedule": [
+      {
+        "time_absolute_iso": "2025-11-27T06:24:00+00:00",
+        "event_title": "ゲーム開始: 初期価格設定"
+      },
+      {
+        "time_absolute_iso": "2025-11-27T06:25:30+00:00",
+        "event_title": "中央銀行が金利を緊急引き上げ（イベント1）"
+      },
+      {
+        "time_absolute_iso": "2025-11-27T06:27:00+00:00",
+        "event_title": "革新的なAIチップが発表される（イベント6）"
+      },
+      {
+        "time_absolute_iso": "2025-11-27T06:29:30+00:00",
+        "event_title": "世界的な景気後退入り（イベント2）"
+      },
+      {
+        "time_absolute_iso": "2025-11-27T06:31:30+00:00",
+        "event_title": "次のイベント予定: 新技術の発表"
+      }
     ]
   }
 ]
