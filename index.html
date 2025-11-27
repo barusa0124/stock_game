@@ -68,19 +68,11 @@
             throw new Error(`ファイルアクセスエラー: JSONファイルの読み込みに失敗しました (${response.status} ${response.statusText})。`);
           }
           
-          // ----------------------------------------------------
-          // ★★★ デバッグのために生のテキストデータを取得 ★★★
-          // ----------------------------------------------------
-          const rawText = await response.text();
-          console.log("【デバッグ】受信した生のテキストデータ:", rawText); 
-          
           let data;
           try {
-            data = JSON.parse(rawText);
+            data = await response.json(); // 生データ取得とパースを同時に行う
           } catch (e) {
-             // パース失敗時、エラーの詳細をコンソールに出力
-             console.error("【致命的エラー】JSONパース失敗:", e);
-             throw new Error('JSONパースエラー: stock_schedule.jsonの内容を解析できませんでした。コンソールで「Received text content」を確認してください。');
+             throw new Error('JSONパースエラー: stock_schedule.jsonの内容を解析できませんでした。');
           }
           
           gameSchedule = data;
