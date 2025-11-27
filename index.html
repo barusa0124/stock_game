@@ -63,10 +63,19 @@
           loadingElement.textContent = 'スケジュールデータをダウンロード中...';
           
           const response = await fetch(JSON_FILE_URL);
+          
           if (!response.ok) {
-            throw new Error(`JSONファイルの読み込みに失敗しました: ${response.status} ${response.statusText}`);
+            // HTTPステータスが200番台でなかった場合（例: 404 Not Found）
+            throw new Error(`ファイルアクセスエラー: JSONファイルの読み込みに失敗しました (${response.status})。ファイルパスを確認してください。`);
           }
-          const data = await response.json();
+          
+          let data;
+          try {
+            data = await response.json();
+          } catch (e) {
+             // JSONパースエラー
+             throw new Error('JSONパースエラー: stock_schedule.jsonの形式が不正です。コンマや引用符を確認してください。');
+          }
           
           gameSchedule = data;
           // 新しいプロパティ time_absolute_iso (ISO文字列) をDateオブジェクトに変換して比較用に持つ
@@ -83,9 +92,12 @@
           setInterval(checkAndUpdate, UPDATE_INTERVAL);
           
         } catch(error) {
-          loadingElement.textContent = `エラー: ${error.message}。\nJSONファイル (${JSON_FILE_URL}) が見つからないか、形式が不正です。`;
-          loadingElement.classList.add('text-red-500');
-          console.error(error);
+          // エラーメッセージをユーザーに表示
+          loadingElement.textContent = `エラーが発生し、処理が停止しました: ${error.message}`;
+          loadingElement.classList.remove('text-gray-500');
+          loadingElement.classList.add('text-red-500', 'font-bold');
+          document.getElementById('game-status').textContent = 'エラーにより停止';
+          console.error("致命的なロードエラー:", error);
         }
       }
 
@@ -135,7 +147,7 @@
                 const minutes = Math.floor(totalSeconds / 60);
                 const seconds = totalSeconds % 60;
                 
-                statusElement.textContent = \`次回イベントまで: \${minutes}分\${seconds}秒\`;
+                statusElement.textContent = `次回イベントまで: ${minutes}分${seconds}秒`;
             } else {
                 statusElement.textContent = 'ゲーム終了済み (最終データ表示中)';
             }
@@ -149,7 +161,7 @@
                 const minutes = Math.floor(totalSeconds / 60);
                 const seconds = totalSeconds % 60;
                 
-                statusElement.textContent = \`ゲーム開始まで: \${minutes}分\${seconds}秒\`;
+                statusElement.textContent = `ゲーム開始まで: ${minutes}分${seconds}秒`;
                 eventElement.textContent = '初期化待ち';
             } else {
                 // スケジュールにデータがない
@@ -163,12 +175,14 @@
        */
       function updateDisplay(prices) {
         const board = document.getElementById('price-board');
+        const eventElement = document.getElementById('current-event'); // 再取得
+        eventElement.textContent = eventTitle;
         
         prices.forEach(item => {
           const formattedPrice = item.price.toLocaleString();
           // 日本語の銘柄名を含むため、ID生成ロジックは維持
           const safeName = item.name.replace(/[^a-zA-Z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/g, ''); 
-          const priceId = \`price-\${safeName}\`;
+          const priceId = `price-${safeName}`;
 
           let existingElement = document.getElementById(priceId);
 
@@ -176,18 +190,18 @@
               const newDiv = document.createElement('div');
               newDiv.id = priceId;
               newDiv.className = "card bg-white p-5 rounded-xl border border-gray-200 hover:border-indigo-400 transition duration-150";
-              newDiv.innerHTML = \`
-                  <h2 class="text-xl font-semibold text-gray-600 mb-1">\${item.name}</h2>
-                  <p class="text-3xl font-bold text-indigo-600">¥ \${formattedPrice}</p>
-              \`;
+              newDiv.innerHTML = `
+                  <h2 class="text-xl font-semibold text-gray-600 mb-1">${item.name}</h2>
+                  <p class="text-3xl font-bold text-indigo-600">¥ ${formattedPrice}</p>
+              `;
               board.appendChild(newDiv);
               existingElement = newDiv;
           } 
           
           const priceSpan = existingElement.querySelector('p');
-          if (priceSpan && priceSpan.textContent !== \`¥ \${formattedPrice}\`) {
+          if (priceSpan && priceSpan.textContent !== `¥ ${formattedPrice}`) {
               priceSpan.classList.add('animate-pulse-once');
-              priceSpan.textContent = \`¥ \${formattedPrice}\`;
+              priceSpan.textContent = `¥ ${formattedPrice}`;
               setTimeout(() => priceSpan.classList.remove('animate-pulse-once'), 1000); 
           }
         });
