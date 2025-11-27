@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <title>ゲーム株価ボード</title>
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; }
+    .card { 
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); 
+        transition: transform 0.2s;
+    }
+    .card:hover {
+        transform: translateY(-2px);
+    }
+    /* 価格更新時のアニメーション */
+    @keyframes pulse-once {
+      0% { transform: scale(1); color: #dc2626; } /* 赤く変化 */
+      50% { transform: scale(1.03); color: #10b981; } /* 緑に変化し、少し拡大 */
+      100% { transform: scale(1); color: #4f46e5; } /* 元の色に戻る */
+    }
+    .animate-pulse-once {
+      animation: pulse-once 1s ease-in-out;
+    }
+  </style>
+</head>
+<body class="p-4 sm:p-8">
+  <div class="max-w-4xl mx-auto">
+    <header class="text-center mb-8">
+      <h1 class="text-3xl font-extrabold text-indigo-700 mb-2">ゲーム内株価一覧</h1>
+      <p id="game-status" class="text-lg font-semibold text-gray-700">データを読み込み中...</p>
+      <p class="text-sm text-gray-500">
+        現在のイベント: <span id="current-event" class="font-medium text-indigo-500">--</span> | 最終確認: <span id="last-updated">--</span>
+      </p>
+    </header>
+
+    <!-- 株価表示エリア -->
+    <div id="price-board" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div id="loading" class="col-span-1 md:col-span-2 text-center text-gray-500 py-10">
+        データを読み込み中...
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // IIFEで全体をラッピングし、スコープを隔離
+    (function() {
+      
+      const JSON_FILE_URL = './stock_schedule.json';
+      const UPDATE_INTERVAL = 5000; // 5秒ごとにチェック (ミリ秒)
+
+      let gameSchedule = [];
+
+      /**
+       * 株価スケジュールデータを外部JSONファイルから取得し、格納する
+       */
+      async function loadSchedule() {
+        const loadingElement = document.getElementById('loading');
+        
+        try {
+          loadingElement.textContent = 'スケジュールデータをダウンロード中...';
+          
+          const response = await fetch(JSON_FILE_URL);
+          if (!response.ok) {
+            throw new Error(`JSONファイルの読み込みに失敗しました: ${response.status} ${response.statusText}`);
+          }
+          const data = await response.json();
+          
+          gameSchedule = data;
+          // 新しいプロパティ time_absolute_iso (ISO文字列) をDateオブジェクトに変換して比較用に持つ
+          gameSchedule.forEach(event => {
+              event.time_date = new Date(event.time_absolute_iso);
+          });
+          // 時間順にソート (万が一ソートされていない場合に対応)
+          gameSchedule.sort((a, b) => a.time_date.getTime() - b.time_date.getTime()); 
+          
+          // ロード完了
+          if (loadingElement) loadingElement.remove();
+
+          checkAndUpdate();
+          setInterval(checkAndUpdate, UPDATE_INTERVAL);
+          
+        } catch(error) {
+          loadingElement.textContent = `エラー: ${error.message}。\nJSONファイル (${JSON_FILE_URL}) が見つからないか、形式が不正です。`;
+          loadingElement.classList.add('text-red-500');
+          console.error(error);
+        }
+      }
+
+      /**
+       * 現在時刻に基づいて表示を更新するメインロジック
+       */
+      function checkAndUpdate() {
+        if (gameSchedule.length === 0) return; 
+        
+        const now = new Date();
+        const statusElement = document.getElementById('game-status');
+        const eventElement = document.getElementById('current-event');
+
+        // 現在時刻より過去で、最も時刻が新しいデータポイントを探す
+        let latestPriceData = null;
+        let latestEventTitle = 'ゲーム開始前の初期設定';
+        let latestEventTime = null;
+
+        for (let i = 0; i < gameSchedule.length; i++) {
+          const event = gameSchedule[i];
+          
+          if (event.time_date.getTime() <= now.getTime()) {
+            // このイベントは既に発生済み
+            latestPriceData = event.prices;
+            latestEventTitle = event.event_title;
+            latestEventTime = event.time_date;
+          } else {
+            // 次のイベントが未発生の場合、ループを終了
+            // latestPriceDataには、この手前のデータが格納されている
+            break; 
+          }
+        }
+        
+        // --- 状態表示の更新 ---
+        
+        if (latestPriceData) {
+            // ゲーム進行中
+            statusElement.textContent = 'ゲーム進行中';
+            eventElement.textContent = latestEventTitle;
+            updateDisplay(latestPriceData);
+            
+            // 次のイベント時刻までの残り時間を計算し表示
+            const nextEvent = gameSchedule.find(event => event.time_date.getTime() > now.getTime());
+            if (nextEvent) {
+                const timeRemainingMs = nextEvent.time_date.getTime() - now.getTime();
+                const totalSeconds = Math.round(timeRemainingMs / 1000);
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                
+                statusElement.textContent = \`次回イベントまで: \${minutes}分\${seconds}秒\`;
+            } else {
+                statusElement.textContent = 'ゲーム終了済み (最終データ表示中)';
+            }
+            
+        } else {
+            // まだ最初のイベント時刻に到達していない
+            const firstEventTime = gameSchedule[0].time_date;
+            if (firstEventTime.getTime() > now.getTime()) {
+                const timeRemainingMs = firstEventTime.getTime() - now.getTime();
+                const totalSeconds = Math.round(timeRemainingMs / 1000);
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                
+                statusElement.textContent = \`ゲーム開始まで: \${minutes}分\${seconds}秒\`;
+                eventElement.textContent = '初期化待ち';
+            } else {
+                // スケジュールにデータがない
+                document.getElementById('price-board').innerHTML = '<div class="col-span-1 md:col-span-2 text-center text-gray-500 py-10">表示可能な株価データがありません。</div>';
+            }
+        }
+      }
+
+      /**
+       * 取得したデータに基づいてHTMLを更新する
+       */
+      function updateDisplay(prices) {
+        const board = document.getElementById('price-board');
+        
+        prices.forEach(item => {
+          const formattedPrice = item.price.toLocaleString();
+          // 日本語の銘柄名を含むため、ID生成ロジックは維持
+          const safeName = item.name.replace(/[^a-zA-Z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/g, ''); 
+          const priceId = \`price-\${safeName}\`;
+
+          let existingElement = document.getElementById(priceId);
+
+          if (!existingElement) {
+              const newDiv = document.createElement('div');
+              newDiv.id = priceId;
+              newDiv.className = "card bg-white p-5 rounded-xl border border-gray-200 hover:border-indigo-400 transition duration-150";
+              newDiv.innerHTML = \`
+                  <h2 class="text-xl font-semibold text-gray-600 mb-1">\${item.name}</h2>
+                  <p class="text-3xl font-bold text-indigo-600">¥ \${formattedPrice}</p>
+              \`;
+              board.appendChild(newDiv);
+              existingElement = newDiv;
+          } 
+          
+          const priceSpan = existingElement.querySelector('p');
+          if (priceSpan && priceSpan.textContent !== \`¥ \${formattedPrice}\`) {
+              priceSpan.classList.add('animate-pulse-once');
+              priceSpan.textContent = \`¥ \${formattedPrice}\`;
+              setTimeout(() => priceSpan.classList.remove('animate-pulse-once'), 1000); 
+          }
+        });
+        
+        document.getElementById('last-updated').textContent = new Date().toLocaleTimeString('ja-JP');
+      }
+      
+      // スケジュールをロードして処理を開始
+      loadSchedule();
+    })();
+  </script>
+</body>
+</html>
