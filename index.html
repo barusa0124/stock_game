@@ -2,6 +2,7 @@
 <html>
 <head>
   <base target="_top">
+  <meta charset="UTF-8"> <!-- ★★★ 修正点：文字コードの明示的な指定 ★★★ -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -70,7 +71,7 @@
           
           let data;
           try {
-            data = await response.json(); // 生データ取得とパースを同時に行う
+            data = await response.json(); 
           } catch (e) {
              throw new Error('JSONパースエラー: stock_schedule.jsonの内容を解析できませんでした。');
           }
