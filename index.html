@@ -4,12 +4,9 @@
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Chart.jsライブラリ -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <!-- 時刻スケール用アダプター -->
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
   
-  <!-- Tailwind CSS -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <title>株価情報</title>
   <style>
@@ -162,14 +159,12 @@
       <p class="text-sm">最終読み込み時刻: <span id="last-updated">--</span></p>
     </header>
     
-    <!-- チャートエリア -->
     <div class="card">
         <div class="chart-header">
             <div class="flex items-center gap-4" style="display:flex; align-items:center; gap:1rem;">
                 <h2 class="text-xl">株価推移</h2>
                 <select id="time-range-selector">
-                    <!-- JSで生成 -->
-                </select>
+                    </select>
             </div>
         </div>
         <div class="chart-wrapper">
@@ -189,7 +184,6 @@
         </div>
     </div>
     
-    <!-- イベント履歴 -->
     <div class="card event-history">
         <h2>直近のイベント履歴</h2>
         <ul id="event-list" class="event-list">
@@ -197,7 +191,6 @@
         </ul>
     </div>
 
-    <!-- 株価カードエリア -->
     <div class="lg:col-span-2">
        <h2 class="text-xl" style="margin-bottom:1rem; border-bottom:1px solid #e5e7eb; padding-bottom:0.5rem;">全銘柄の現在の株価と変動</h2>
        <div id="price-board"></div>
@@ -529,7 +522,10 @@
           const loadingMsg = document.getElementById('loading-message');
           if(loadingMsg) loadingMsg.style.display = 'flex';
 
-          fetch(JSON_FILE_URL)
+          // --- キャッシュ対策: URL末尾にタイムスタンプを付与 ---
+          const timestampedUrl = `${JSON_FILE_URL}?t=${new Date().getTime()}`;
+
+          fetch(timestampedUrl)
             .then(res => {
                 if (!res.ok) throw new Error(res.statusText);
                 return res.json();
@@ -570,8 +566,7 @@
       function initTimeRangeSelector() {
           const select = document.getElementById('time-range-selector');
           select.innerHTML = '';
-          const opts = [ { label: '直近 5分', value: 5 }, { label: '直近 10分', value: 10 }, { label: '直近 30分', value: 30 } ];
-          opts.forEach(opt => {
+          TIME_RANGE_OPTIONS.forEach(opt => {
               const o = document.createElement('option');
               o.value = opt.value; o.textContent = opt.label;
               if (opt.value === currentHistoryMinutes) o.selected = true;
