@@ -11,7 +11,7 @@
   
   <!-- Tailwind CSS -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <title>ゲーム株価ボード</title>
+  <title>株価情報</title>
   <style>
     /* --- 基本スタイル --- */
     :root {
@@ -199,7 +199,7 @@
 
     <!-- 株価カードエリア -->
     <div class="lg:col-span-2">
-       <h2 class="text-xl" style="margin-bottom:1rem; border-bottom:1px solid #e5e7eb; padding-bottom:0.5rem;">全銘柄の現在価格と変動</h2>
+       <h2 class="text-xl" style="margin-bottom:1rem; border-bottom:1px solid #e5e7eb; padding-bottom:0.5rem;">全銘柄の現在の株価と変動</h2>
        <div id="price-board"></div>
     </div>
   </div>
@@ -215,7 +215,8 @@
       const TIME_RANGE_OPTIONS = [
           { label: '直近 5分', value: 5 },
           { label: '直近 10分', value: 10 },
-          { label: '直近 30分', value: 30 }
+          { label: '直近 30分', value: 30 },
+          { label: '直近 1時間', value: 60 },
       ];
       let currentHistoryMinutes = 10; 
 
