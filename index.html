@@ -139,7 +139,7 @@
         cursor: pointer;
         transition: opacity 0.2s, filter 0.2s;
     }
-    /* ★★★ 修正点1: 非表示時のスタイルを強化（薄く、白黒に） ★★★ */
+    /* 非表示時のスタイル強化 */
     .legend-item.inactive {
         opacity: 0.3; 
         filter: grayscale(100%);
@@ -222,13 +222,11 @@
         <div class="chart-header">
             <div class="chart-title-wrapper">
                 <h2 class="text-xl font-bold text-gray-800">株価推移</h2>
-                <!-- ★★★ 修正点2: 時間範囲選択プルダウン ★★★ -->
                 <select id="time-range-selector">
-                    <!-- JSで生成されます -->
+                    <!-- JSで生成 -->
                 </select>
             </div>
         </div>
-        
         <div class="chart-wrapper">
             <!-- グラフ本体 -->
             <div class="chart-canvas-container">
@@ -274,26 +272,24 @@
     // IIFEで全体をラッピングし、スコープを隔離
     (function() {
       
-      const UPDATE_INTERVAL = 5000; // 5秒ごとにチェック (ミリ秒)
-      const EVENT_HISTORY_COUNT = 3; // イベント履歴の表示件数 (n件)
-      const LOCAL_STORAGE_KEY = 'active_stocks_v2'; // LocalStorageキー
-      const JSON_FILE_URL = './stock_schedule.json'; // 外部JSONファイルを参照
+      const UPDATE_INTERVAL = 5000; 
+      const EVENT_HISTORY_COUNT = 3; 
+      const LOCAL_STORAGE_KEY = 'active_stocks_v2'; 
+      const JSON_FILE_URL = './stock_schedule.json';
 
-      // ★★★ 修正点2: 時間範囲の選択肢設定（簡単に書き換え可能） ★★★
       const TIME_RANGE_OPTIONS = [
           { label: '直近 5分', value: 5 },
           { label: '直近 10分', value: 10 },
           { label: '直近 30分', value: 30 }
       ];
-      let currentHistoryMinutes = 10; // 初期値
+      let currentHistoryMinutes = 10; 
 
       let pricesSchedule = []; 
       let eventsSchedule = []; 
-      let ACTIVE_STOCKS = new Set(); // 表示する銘柄を管理するSet
-      let stockChart = null; // Chart.jsインスタンスを格納
-      let dynamicStockColors = {}; // 銘柄ごとの色を保持
+      let ACTIVE_STOCKS = new Set(); 
+      let stockChart = null; 
+      let dynamicStockColors = {}; 
 
-      // ★★★ 修正点3: カラーパレット (動的割り当て用) ★★★
       const COLOR_PALETTE = [
           "rgb(59, 130, 246)",   // Blue
           "rgb(16, 185, 129)",   // Green
@@ -305,20 +301,14 @@
           "rgb(168, 85, 247)",   // Purple
           "rgb(236, 72, 153)",   // Pink
           "rgb(6, 182, 212)",    // Cyan
-          "rgb(20, 184, 166)",   // Teal
-          "rgb(217, 70, 239)"    // Fuchsia
       ];
       
       // --- UTILITY FUNCTIONS ---
 
-      /**
-       * ★★★ 修正点3: 銘柄名から色を取得する (動的対応) ★★★
-       */
       function getColorForStock(name) {
           if (dynamicStockColors[name]) {
               return dynamicStockColors[name];
           }
-          // 新しい色を割り当て
           const index = Object.keys(dynamicStockColors).length;
           const color = COLOR_PALETTE[index % COLOR_PALETTE.length];
           dynamicStockColors[name] = color;
@@ -408,7 +398,7 @@
 
       function updateChartData(pricesSchedule) {
           const now = Date.now();
-          const historyMs = currentHistoryMinutes * 60 * 1000; // ★★★ 修正点2: 可変範囲 ★★★
+          const historyMs = currentHistoryMinutes * 60 * 1000;
           
           const filteredHistory = pricesSchedule.filter(entry => 
               entry.time_date.getTime() >= (now - historyMs) && entry.time_date.getTime() <= now
@@ -435,9 +425,7 @@
 
           const { scaleMin, scaleMax } = getYAxisScale(minPrice, maxPrice);
 
-          // ★★★ 修正点3: 銘柄名を動的に取得 ★★★
           const stockNames = pricesSchedule.length > 0 ? pricesSchedule[0].prices.map(p => p.name) : [];
-          
           const datasets = stockNames.map(name => {
               const dataPoints = filteredHistory.map(entry => {
                   const priceEntry = entry.prices.find(p => p.name === name);
@@ -447,7 +435,7 @@
                   };
               });
 
-              const color = getColorForStock(name); // 動的色取得
+              const color = getColorForStock(name); 
 
               return {
                   label: name,
@@ -471,15 +459,14 @@
       function updateLegendList(currentPrices, previousPrices) {
           const listContainer = document.getElementById('legend-list');
           
-          // リストがまだない場合は作成（初回または銘柄数変更時）
           if (listContainer.children.length !== currentPrices.length) {
               listContainer.innerHTML = '';
               currentPrices.forEach(item => {
                   const name = item.name;
-                  const color = getColorForStock(name); // 動的色取得
+                  const color = getColorForStock(name);
                   
                   const div = document.createElement('div');
-                  // ★★★ 修正点1: inactiveクラスの使用 ★★★
+                  // inactive クラスを付与
                   div.className = `legend-item ${ACTIVE_STOCKS.has(name) ? '' : 'inactive'}`;
                   div.id = `legend-item-${name}`;
                   div.onclick = () => toggleStock(name);
@@ -541,7 +528,7 @@
           
           const itemEl = document.getElementById(`legend-item-${name}`);
           if (itemEl) {
-              // ★★★ 修正点1: 非表示時はinactiveクラスを追加 ★★★
+              // inactive クラスの切り替え
               if (ACTIVE_STOCKS.has(name)) itemEl.classList.remove('inactive');
               else itemEl.classList.add('inactive');
           }
@@ -578,9 +565,6 @@
 
       // --- データロードとメインループ ---
       
-      /**
-       * ★★★ 修正点2: 時間範囲選択プルダウンの初期化 ★★★
-       */
       function initTimeRangeSelector() {
           const select = document.getElementById('time-range-selector');
           select.innerHTML = '';
@@ -619,8 +603,7 @@
           } catch(e) {}
       }
 
-      // 銘柄別カード更新（元の関数名: updateDisplay）
-      // ここでは名前を変えずに、checkAndUpdateから呼び出すためにこの名前を使用
+      // 銘柄別カード更新
       function updatePriceCards(currentPrices, previousPrices) {
         const board = document.getElementById('price-board');
         
@@ -700,11 +683,10 @@
           const recentEvents = eventsSchedule.filter(e => e.time_date <= now).reverse();
 
           if (latestPriceData) {
-              // 修正: 関数呼び出しの整理
               updateLegendList(latestPriceData, previousPriceData);
               updateEventHistory(recentEvents);
               updateChartData(pricesSchedule);
-              updatePriceCards(latestPriceData, previousPriceData); // 下部のカード更新
+              updatePriceCards(latestPriceData, previousPriceData); // カード更新
               document.getElementById('last-updated').textContent = new Date().toLocaleTimeString('ja-JP');
           } else {
               const loadingMsg = document.getElementById('loading-message');
@@ -712,7 +694,6 @@
                   loadingMsg.style.display = 'flex';
                   loadingMsg.textContent = "ゲーム開始前です";
               }
-              // 銘柄カードエリアにも表示
               document.getElementById('price-board').innerHTML = '<div class="col-span-1 md:col-span-2 text-center text-gray-500 py-10">ゲーム開始時刻までお待ちください。</div>';
           }
       }
@@ -736,12 +717,13 @@
 
               if (loadingMsg) loadingMsg.remove();
               
-              // ★★★ 修正点3: 銘柄名の動的取得 ★★★
               const allNames = pricesSchedule.length > 0 ? pricesSchedule[0].prices.map(p => p.name) : [];
               
               loadActiveStocks(allNames);
               initTimeRangeSelector();
-              drawLegend(allNames); // 凡例の初期化
+              
+              // 凡例の初期化（ここでは空で呼び出し、checkAndUpdateで中身を入れる）
+              // 削除されていた drawLegend の代わりの初期化は不要（updateLegendListが生成するため）
 
               checkAndUpdate();
               setInterval(checkAndUpdate, UPDATE_INTERVAL);
@@ -755,7 +737,6 @@
           }
       }
       
-      // スタート
       loadSchedule();
 
     })();
