@@ -570,7 +570,7 @@
       function initTimeRangeSelector() {
           const select = document.getElementById('time-range-selector');
           select.innerHTML = '';
-          const opts = [ { label: '直近 5分', value: 5 }, { label: '直近 10分', value: 10 }, { label: '直近 30分', value: 30 } ];
+          const opts = [ { label: '直近 5分', value: 5 }, { label: '直近 10分', value: 10 }, { label: '直近 30分', value: 30 }, { label: '直近 1時間', value: 60 } ];
           opts.forEach(opt => {
               const o = document.createElement('option');
               o.value = opt.value; o.textContent = opt.label;
