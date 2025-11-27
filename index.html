@@ -9,67 +9,143 @@
   <!-- 時刻スケール用アダプターの追加 -->
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
   
-  <!-- ★★★ 修正点：Tailwind CDNを削除し、インラインスタイルに置き換える ★★★ -->
-  <!-- <script src="https://cdn.tailwindcss.com"></script> を削除 -->
+  <!-- Tailwind CSSをCDNから手動インライン化 -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <title>ゲーム株価ボード</title>
   <style>
-    /* TailwindのCDNを使用しないため、主要なスタイルを手動で記述します */
-    body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; margin: 0; padding: 0;}
-    .card { 
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); 
-        border-radius: 0.5rem; /* rounded-xl */
-        transition: transform 0.2s;
+    /* Tailwind CSSクラスの手動再現とカスタムスタイル */
+    :root {
+        font-family: 'Inter', sans-serif;
+        --color-bg: #f0f4f8; /* gray-100/200 */
+        --color-card-bg: #fff;
+        --color-border: #e5e7eb;
+        --color-text-primary: #1f2937; /* gray-800 */
+        --color-text-secondary: #6b7280; /* gray-500 */
+        --color-indigo: rgb(79, 70, 229); /* indigo-600 */
+        --color-green: rgb(5, 150, 105); /* green-600 */
+        --color-red: rgb(220, 38, 38); /* red-600 */
     }
-    .card:hover {
-        transform: translateY(-2px);
+    body {
+        font-family: var(--font-family);
+        background-color: var(--color-bg);
+        margin: 0; padding: 0.5rem 1rem; /* p-4 sm:p-8 */
     }
-    /* レイアウトの基本 */
     .max-w-6xl { max-width: 1152px; }
     .mx-auto { margin-left: auto; margin-right: auto; }
-    .p-6 { padding: 1.5rem; }
-    .mb-8 { margin-bottom: 2rem; }
-    .text-center { text-align: center; }
-    .font-extrabold { font-weight: 800; }
-    .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
-    .text-indigo-700 { color: rgb(67, 56, 202); }
 
-    /* Flex/Gridレイアウト */
-    .grid { display: grid; }
-    .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
-    .lg\\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .gap-6 { gap: 1.5rem; }
-    .space-y-4 > * + * { margin-top: 1rem; }
-    .lg\\:col-span-1 { grid-column: span 1 / span 1; }
-    .lg\\:col-span-2 { grid-column: span 2 / span 2; }
-    
-    /* 価格表示カードの基本 */
-    .bg-white { background-color: #fff; }
-    .border { border: 1px solid #e5e7eb; }
-    .hover\\:border-indigo-400:hover { border-color: rgb(129, 140, 248); }
+    /* カードスタイル */
+    .card { 
+        background-color: var(--color-card-bg);
+        border: 1px solid var(--color-border);
+        border-radius: 0.75rem; /* rounded-xl */
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); 
+        padding: 1.5rem; /* p-6 */
+        transition: transform 0.2s;
+    }
+    .card:hover { transform: translateY(-2px); }
+
+    /* タイポグラフィ */
+    .text-center { text-align: center; }
+    .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+    .font-extrabold { font-weight: 800; }
+    .text-indigo-700 { color: rgb(67, 56, 202); }
+    .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+    .text-gray-500 { color: var(--color-text-secondary); }
     .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
-    .text-gray-800 { color: #1f2937; }
-    .mb-3 { margin-bottom: 0.75rem; }
+    .font-bold { font-weight: 700; }
+    .text-gray-800 { color: var(--color-text-primary); }
+    .mb-2 { margin-bottom: 0.5rem; }
+    .mb-8 { margin-bottom: 2rem; }
+    .border-b { border-bottom: 1px solid var(--color-border); }
     .pb-2 { padding-bottom: 0.5rem; }
-    .flex { display: flex; }
-    .items-end { align-items: flex-end; }
-    .justify-between { justify-content: space-between; }
+
+    /* レイアウト（Grid/Flex） */
+    .grid { display: grid; }
+    .gap-6 { gap: 1.5rem; }
+    .mb-8 { margin-bottom: 2rem; }
+    .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+    
+    @media (min-width: 1024px) { /* lg */
+        .lg\\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .lg\\:col-span-1 { grid-column: span 1 / span 1; }
+        .lg\\:col-span-2 { grid-column: span 2 / span 2; }
+    }
+    .space-y-4 > * + * { margin-top: 1rem; }
+
+    /* 銘柄カード（均一化のためflexを使用） */
+    #price-board {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* md:grid-cols-2の代わり */
+        gap: 1rem;
+    }
+    #price-board > div {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 1.25rem; /* p-5 */
+        min-height: 120px; /* カードの最小高さを設定 */
+    }
+    .price-details {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        margin-bottom: 0.75rem; /* mb-3 */
+    }
     .text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
-    .text-indigo-600 { color: rgb(79, 70, 229); }
+    .text-indigo-600 { color: var(--color-indigo); }
     .text-right { text-align: right; }
     .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
-    .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
-    .text-green-600 { color: rgb(5, 150, 105); }
-    .text-red-600 { color: rgb(220, 38, 38); }
-    
-    /* その他のスタイル */
-    .border-b { border-bottom-width: 1px; }
-    .pl-3 { padding-left: 0.75rem; }
+    .text-green-600 { color: var(--color-green); }
+    .text-red-600 { color: var(--color-red); }
+
+    /* チャートコンテナと凡例 */
+    .chart-container-wrapper { 
+        display: flex;
+        gap: 1rem; /* gap-4 */
+        height: 300px; 
+    }
+    .combined-chart-area {
+        flex-grow: 1;
+        max-width: 75%; 
+        position: relative;
+    }
+    .chart-legend-wrapper {
+        width: 25%;
+        max-width: 180px;
+        border-left: 1px solid var(--color-border);
+        padding-left: 0.75rem; /* pl-3 */
+        overflow-y: auto;
+    }
+    .legend-item {
+        display: flex;
+        align-items: center;
+        font-size: 0.875rem;
+        color: #4b5563; 
+        margin-bottom: 4px;
+        cursor: pointer;
+    }
+    .legend-item input[type="checkbox"] {
+        margin-right: 0.5rem; /* mr-2 */
+        height: 1rem; width: 1rem;
+        border-radius: 0.25rem;
+        cursor: pointer;
+    }
+
+    /* イベント履歴 */
     .border-l-4 { border-left-width: 4px; }
+    .pl-3 { padding-left: 0.75rem; }
     .border-indigo-400 { border-color: rgb(129, 140, 248); }
-    .text-gray-700 { color: #374151; }
-    .text-gray-500 { color: #6b7280; }
-    .font-semibold { font-weight: 600; }
+    .space-y-3 > * + * { margin-top: 0.75rem; }
+
+    /* 価格更新時のアニメーション */
+    @keyframes pulse-once {
+      0% { transform: scale(1); color: var(--color-red); }
+      50% { transform: scale(1.03); color: var(--color-green); }
+      100% { transform: scale(1); color: var(--color-indigo); }
+    }
+    .animate-pulse-once {
+      animation: pulse-once 1s ease-in-out;
+    }
   </style>
 </head>
 <body class="p-4 sm:p-8">
@@ -113,7 +189,6 @@
       <!-- 3. 株価表示エリア (銘柄別カード) -->
       <div class="lg:col-span-2 space-y-4">
         <h2 class="text-xl font-bold text-gray-800 mb-3 border-b pb-2">全銘柄の現在価格と変動</h2>
-        <!-- ★★★ 修正点2: グリッドコンテナの余白を制御 ★★★ -->
         <div id="price-board" class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div id="loading" class="col-span-1 md:col-span-2 text-center text-gray-500 py-10">
             データを読み込み中...
@@ -139,14 +214,14 @@
       
       // 8銘柄の固有色を定義 (Chart.js対応)
       const STOCK_COLORS = {
-          "金融": "rgb(59, 130, 246)", // blue-500
-          "ヘルスケア": "rgb(16, 185, 129)", // emerald-500
-          "情報・通信": "rgb(239, 68, 68)", // red-500
-          "インフラ・公共事業": "rgb(245, 158, 11)", // amber-500
-          "不動産": "rgb(99, 102, 241)", // indigo-500
-          "生活必需品": "rgb(132, 204, 22)", // lime-500
-          "化学・素材": "rgb(249, 115, 22)", // orange-500
-          "エネルギー": "rgb(168, 85, 247)" // violet-500
+          "金融": "rgb(59, 130, 246)", 
+          "ヘルスケア": "rgb(16, 185, 129)", 
+          "情報・通信": "rgb(239, 68, 68)", 
+          "インフラ・公共事業": "rgb(245, 158, 11)", 
+          "不動産": "rgb(99, 102, 241)", 
+          "生活必需品": "rgb(132, 204, 22)", 
+          "化学・素材": "rgb(249, 115, 22)", 
+          "エネルギー": "rgb(168, 85, 247)" 
       };
       
       // --- デモデータ: 現在時刻より5分前を基準に設定 ---
@@ -272,16 +347,15 @@
       function updateChartData() {
           const now = Date.now();
           const historyMs = HISTORY_MINUTES * 60 * 1000;
-          const chartStartMs = now - historyMs;
-
+          
           // 1. フィルタリングされた履歴データを取得
           const filteredHistory = pricesSchedule.filter(entry => 
-              entry.time_date.getTime() >= chartStartMs && entry.time_date.getTime() <= now
+              entry.time_date.getTime() >= (now - historyMs) && entry.time_date.getTime() <= now
           );
 
           if (filteredHistory.length === 0) {
               const container = document.getElementById('chart-container-wrapper');
-              if (stockChart) stockChart.destroy();
+              if (stockChart) { stockChart.destroy(); stockChart = null; } 
               container.innerHTML = '<p class="text-center text-gray-500 py-10">表示する履歴データがありません。</p>';
               return;
           }
@@ -294,7 +368,7 @@
           // 3. Y軸スケールをキリの良い数字に設定
           const { scaleMin, scaleMax } = getYAxisScale(minPrice, maxPrice);
 
-          // 4. データセットを構築
+          // 4. データセットを構築 (チェック状態をhiddenに反映)
           const stockNames = pricesSchedule.length > 0 ? pricesSchedule[0].prices.map(p => p.name) : [];
           const datasets = stockNames.map(name => {
               const dataPoints = filteredHistory.map(entry => {
@@ -313,7 +387,9 @@
                   borderWidth: 2,
                   pointRadius: 3,
                   fill: false,
-                  tension: 0
+                  tension: 0,
+                  // LocalStorageから読み込んだ状態を hidden に反映
+                  hidden: !ACTIVE_STOCKS.has(name) 
               };
           });
 
@@ -356,11 +432,12 @@
                   // LocalStorageに保存
                   saveActiveStocks(ACTIVE_STOCKS); 
 
-                  // チェックボックスの状態が変わったら、グラフを再描画
+                  // グラフの表示/非表示を切り替える
                   if (stockChart) {
                       const datasetIndex = stockChart.data.datasets.findIndex(ds => ds.label === name);
                       if (datasetIndex > -1) {
-                          stockChart.setDatasetVisibility(datasetIndex, e.target.checked);
+                          // Chart.jsのAPIではなく、hiddenフラグを直接操作
+                          stockChart.data.datasets[datasetIndex].hidden = !e.target.checked;
                           stockChart.update();
                       }
                   }
@@ -426,7 +503,7 @@
               newDiv.className = "card bg-white p-5 rounded-xl border border-gray-200 hover:border-indigo-400 transition duration-150 flex flex-col justify-center";
               newDiv.innerHTML = `
                   <h2 class="text-xl font-semibold text-gray-600 mb-2">${item.name}</h2>
-                  <div class="flex items-end justify-between mb-3">
+                  <div class="price-details">
                     <p class="text-4xl font-bold text-indigo-600 price-value">¥ ${formattedPrice}</p>
                     <div class="text-right">
                         <p class="text-lg font-bold ${colorClass}">
