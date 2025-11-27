@@ -16,19 +16,19 @@
     /* Tailwind CSSクラスの手動再現とカスタムスタイル */
     :root {
         font-family: 'Inter', sans-serif;
-        --color-bg: #f0f4f8; /* gray-100/200 */
+        --color-bg: #f0f4f8; 
         --color-card-bg: #fff;
         --color-border: #e5e7eb;
-        --color-text-primary: #1f2937; /* gray-800 */
-        --color-text-secondary: #6b7280; /* gray-500 */
-        --color-indigo: rgb(79, 70, 229); /* indigo-600 */
-        --color-green: rgb(5, 150, 105); /* green-600 */
-        --color-red: rgb(220, 38, 38); /* red-600 */
+        --color-text-primary: #1f2937;
+        --color-text-secondary: #6b7280;
+        --color-indigo: rgb(79, 70, 229);
+        --color-green: rgb(22, 163, 74);
+        --color-red: rgb(220, 38, 38);
     }
     body {
         font-family: var(--font-family);
         background-color: var(--color-bg);
-        margin: 0; padding: 0.5rem 1rem; /* p-4 sm:p-8 */
+        margin: 0; padding: 0.5rem;
     }
     .max-w-6xl { max-width: 1152px; }
     .mx-auto { margin-left: auto; margin-right: auto; }
@@ -37,184 +37,231 @@
     .card { 
         background-color: var(--color-card-bg);
         border: 1px solid var(--color-border);
-        border-radius: 0.75rem; /* rounded-xl */
+        border-radius: 0.75rem; 
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); 
-        padding: 1.5rem; /* p-6 */
-        transition: transform 0.2s;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
     }
-    .card:hover { transform: translateY(-2px); }
 
-    /* タイポグラフィ */
+    /* ヘッダー */
     .text-center { text-align: center; }
-    .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+    .text-3xl { font-size: 1.5rem; line-height: 2rem; }
     .font-extrabold { font-weight: 800; }
     .text-indigo-700 { color: rgb(67, 56, 202); }
-    .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+    .text-sm { font-size: 0.875rem; }
     .text-gray-500 { color: var(--color-text-secondary); }
-    .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
-    .font-bold { font-weight: 700; }
-    .text-gray-800 { color: var(--color-text-primary); }
-    .mb-2 { margin-bottom: 0.5rem; }
-    .mb-8 { margin-bottom: 2rem; }
-    .border-b { border-bottom: 1px solid var(--color-border); }
-    .pb-2 { padding-bottom: 0.5rem; }
+    .mb-6 { margin-bottom: 1.5rem; }
 
-    /* レイアウト（Grid/Flex） */
-    .grid { display: grid; }
-    .gap-6 { gap: 1.5rem; }
-    .mb-8 { margin-bottom: 2rem; }
-    .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
-    
-    @media (min-width: 1024px) { /* lg */
-        .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-        .lg\:col-span-1 { grid-column: span 1 / span 1; }
-        .lg\:col-span-2 { grid-column: span 2 / span 2; }
-    }
-    .space-y-4 > * + * { margin-top: 1rem; }
-
-    /* 銘柄カード（均一化のためflexを使用） */
-    #price-board {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* md:grid-cols-2の代わり */
+    /* --- チャートエリアのレスポンシブレイアウト --- */
+    .chart-wrapper {
+        display: flex;
+        flex-direction: column; /* デフォルト（スマホ）は縦並び */
         gap: 1rem;
     }
-    #price-board > div {
+    
+    /* PCなどの大画面用レイアウト */
+    @media (min-width: 768px) {
+        .chart-wrapper {
+            flex-direction: row; /* 横並び */
+            height: 500px; /* PCでは高さを固定してスクロールさせる */
+        }
+        .chart-canvas-container {
+            flex: 1; /* 残りの幅を埋める */
+            height: 100%;
+            min-width: 0; /* Flexbox内でのCanvas縮小対策 */
+        }
+        .chart-legend-container {
+            width: 320px; /* 凡例の幅を固定 */
+            min-width: 320px;
+            border-left: 1px solid var(--color-border);
+            padding-left: 1rem;
+            overflow-y: auto; /* 縦スクロール有効化 */
+            height: 100%;
+        }
+        .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+    }
+
+    /* スマホ用調整 */
+    @media (max-width: 767px) {
+        .chart-canvas-container {
+            height: 300px; /* スマホでのグラフの高さ */
+            width: 100%;
+        }
+        .chart-legend-container {
+            width: 100%;
+            border-top: 1px solid var(--color-border);
+            padding-top: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    }
+
+    /* 凡例アイテムのデザイン */
+    .legend-list {
         display: flex;
         flex-direction: column;
-        justify-content: center;
-        padding: 1.25rem; /* p-5 */
-        min-height: 120px; /* カードの最小高さを設定 */
-    }
-    .price-details {
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        margin-bottom: 0.75rem; /* mb-3 */
-    }
-    .text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
-    .text-indigo-600 { color: var(--color-indigo); }
-    .text-right { text-align: right; }
-    .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
-    .text-green-600 { color: var(--color-green); }
-    .text-red-600 { color: var(--color-red); }
-
-    /* チャートコンテナと凡例 */
-    .chart-container-wrapper { 
-        display: flex;
-        gap: 1rem; /* gap-4 */
-        height: 300px; 
-    }
-    .combined-chart-area {
-        flex-grow: 1;
-        max-width: calc(100% - 196px); /* 凡例の最大幅を考慮 */
-        position: relative;
-    }
-    .chart-legend-wrapper {
-        width: 25%;
-        min-width: 180px;
-        max-width: 180px;
-        border-left: 1px solid var(--color-border);
-        padding-left: 0.75rem; /* pl-3 */
-        overflow-y: auto;
+        gap: 0.5rem;
     }
     .legend-item {
         display: flex;
         align-items: center;
-        font-size: 0.875rem;
-        color: #4b5563; 
-        margin-bottom: 4px;
+        justify-content: space-between;
+        padding: 0.5rem;
+        border-radius: 0.5rem;
+        background-color: #f9fafb;
+        border: 1px solid transparent;
         cursor: pointer;
+        transition: all 0.2s;
     }
-    .legend-item input[type="checkbox"] {
-        margin-right: 0.5rem; /* mr-2 */
-        height: 1rem; width: 1rem;
-        border-radius: 0.25rem;
-        cursor: pointer;
+    .legend-item:hover {
+        background-color: #f3f4f6;
+        border-color: #d1d5db;
     }
+    .legend-item.inactive {
+        opacity: 0.6;
+        background-color: #fff;
+    }
+    
+    .legend-left {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 1;
+        min-width: 0; /* テキスト省略のため */
+    }
+    .legend-color {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+    .legend-name {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--color-text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .legend-right {
+        text-align: right;
+        flex-shrink: 0;
+    }
+    .legend-price {
+        font-weight: 700;
+        font-size: 1rem;
+        color: var(--color-text-primary);
+    }
+    .legend-change {
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    /* チェックボックス（非表示にしてラベル全体をクリック可能にする） */
+    .hidden-checkbox {
+        display: none;
+    }
+
+    /* 値上がり・値下がり色 */
+    .text-green { color: var(--color-green); }
+    .text-red { color: var(--color-red); }
+    .bg-green-100 { background-color: #dcfce7; }
+    .bg-red-100 { background-color: #fee2e2; }
+
+    /* アニメーション */
+    @keyframes flash-green {
+        0% { background-color: #bbf7d0; }
+        100% { background-color: transparent; }
+    }
+    @keyframes flash-red {
+        0% { background-color: #fecaca; }
+        100% { background-color: transparent; }
+    }
+    .flash-up { animation: flash-green 1s ease-out; }
+    .flash-down { animation: flash-red 1s ease-out; }
 
     /* イベント履歴 */
-    .border-l-4 { border-left-width: 4px; }
-    .pl-3 { padding-left: 0.75rem; }
-    .border-indigo-400 { border-color: rgb(129, 140, 248); }
-    .space-y-3 > * + * { margin-top: 0.75rem; }
+    .event-history h2 {
+        font-size: 1.125rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+        border-bottom: 1px solid var(--color-border);
+        padding-bottom: 0.5rem;
+    }
+    .event-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .event-item {
+        padding-left: 0.75rem;
+        border-left: 4px solid var(--color-indigo);
+        margin-bottom: 0.75rem;
+    }
+    .event-title { font-weight: 600; color: var(--color-text-primary); font-size: 0.95rem; }
+    .event-time { font-size: 0.75rem; color: var(--color-text-secondary); }
 
-    /* 価格更新時のアニメーション */
-    @keyframes pulse-once {
-      0% { transform: scale(1); color: var(--color-red); }
-      50% { transform: scale(1.03); color: var(--color-green); }
-      100% { transform: scale(1); color: var(--color-indigo); }
-    }
-    .animate-pulse-once {
-      animation: pulse-once 1s ease-in-out;
-    }
   </style>
 </head>
-<body class="p-4 sm:p-8">
+<body class="p-4">
   <div class="max-w-6xl mx-auto">
-    <header class="text-center mb-8">
-      <h1 class="text-3xl font-extrabold text-indigo-700 mb-2">株価情報</h1>
+    <header class="text-center mb-6">
+      <h1 class="text-3xl font-extrabold text-indigo-700 mb-2">ゲーム内株価一覧</h1>
       <p class="text-sm text-gray-500">
         最終読み込み時刻: <span id="last-updated" class="font-medium">--</span>
       </p>
     </header>
     
-    <!-- 1. 全銘柄の統合株価グラフエリア -->
-    <div class="card bg-white p-6 rounded-xl border border-gray-200 shadow-xl mb-8">
-        <h2 class="text-xl font-bold text-gray-800 mb-2 border-b pb-2">株価推移</h2>
-        
-        <div class="chart-container-wrapper">
-            <!-- グラフ本体 (左側) -->
-            <div id="chart-container-wrapper" class="combined-chart-area">
+    <!-- チャートと凡例（株価情報）のエリア -->
+    <div class="card">
+        <div class="chart-wrapper">
+            <!-- グラフ本体 -->
+            <div class="chart-canvas-container">
                 <canvas id="combined-chart"></canvas>
+                <div id="loading-message" class="flex justify-center items-center h-full text-gray-500">
+                    データを読み込み中...
+                </div>
             </div>
             
-            <!-- 凡例とチェックボックス (右側) -->
-            <div id="chart-legend-wrapper" class="chart-legend-wrapper">
-                <h3 class="text-sm font-semibold mb-2 text-gray-700">表示銘柄の選択</h3>
-                <div id="chart-legend" class="flex flex-col space-y-1">
-                    <!-- 凡例がここに描画されます -->
+            <!-- 凡例と株価情報リスト -->
+            <div class="chart-legend-container">
+                <div class="flex justify-between items-center mb-2 sticky top-0 bg-white pb-2 border-b">
+                    <h3 class="text-sm font-bold text-gray-700">銘柄・株価一覧</h3>
+                    <span class="text-xs text-gray-400">クリックで表示切替</span>
+                </div>
+                <div id="legend-list" class="legend-list">
+                    <!-- ここにJSでリストが生成されます -->
                 </div>
             </div>
         </div>
     </div>
     
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-      <!-- 2. 直近イベント履歴エリア -->
-      <div id="event-history" class="lg:col-span-1 card bg-white p-6 rounded-xl border border-gray-200">
-        <h2 class="text-xl font-bold text-gray-800 mb-3 border-b pb-2">直近のイベント履歴</h2>
-        <ul id="event-list" class="space-y-3 text-sm">
-          <!-- イベントがここに挿入されます -->
+    <!-- イベント履歴 -->
+    <div class="card event-history">
+        <h2>直近のイベント履歴</h2>
+        <ul id="event-list" class="event-list">
+            <li class="text-gray-500 text-sm">イベントを待機中...</li>
         </ul>
-      </div>
-
-      <!-- 3. 株価表示エリア (銘柄別カード) -->
-      <div class="lg:col-span-2 space-y-4">
-        <h2 class="text-xl font-bold text-gray-800 mb-3 border-b pb-2">各銘柄の現在の株価と変動</h2>
-        <div id="price-board" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div id="loading" class="col-span-1 md:col-span-2 text-center text-gray-500 py-10">
-            データを読み込み中...
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 
   <script>
-    // IIFEで全体をラッピングし、スコープを隔離
     (function() {
-      
-      const UPDATE_INTERVAL = 5000; // 5秒ごとにチェック (ミリ秒)
-      const HISTORY_MINUTES = 10; // グラフ表示の履歴期間 (N分間)
-      const EVENT_HISTORY_COUNT = 3; // イベント履歴の表示件数 (n件)
-      const LOCAL_STORAGE_KEY = 'active_stocks'; // LocalStorageキー
-      const JSON_FILE_URL = './stock_schedule.json'; // 外部JSONファイルを参照
+      // --- 設定 ---
+      const UPDATE_INTERVAL = 5000; 
+      const HISTORY_MINUTES = 10;
+      const EVENT_HISTORY_COUNT = 3; 
+      const LOCAL_STORAGE_KEY = 'active_stocks_v2'; 
+      const JSON_FILE_URL = './stock_schedule.json';
 
+      // --- 変数 ---
       let pricesSchedule = []; 
       let eventsSchedule = []; 
-      let ACTIVE_STOCKS = new Set(); // 表示する銘柄を管理するSet
-      let stockChart = null; // Chart.jsインスタンスを格納
+      let ACTIVE_STOCKS = new Set(); 
+      let stockChart = null; 
       
-      // 8銘柄の固有色を定義 (Chart.js対応)
+      // 8銘柄の固有色
       const STOCK_COLORS = {
           "金融": "rgb(59, 130, 246)", 
           "ヘルスケア": "rgb(16, 185, 129)", 
@@ -225,57 +272,48 @@
           "化学・素材": "rgb(249, 115, 22)", 
           "エネルギー": "rgb(168, 85, 247)" 
       };
-      
-      // --- UTILITY FUNCTIONS ---
-      
-      /**
-       * 価格に基づいて、Y軸の最小値と最大値をキリの良い数字で決定する
-       */
+
+      // --- ユーティリティ関数 ---
+
       function getYAxisScale(minPrice, maxPrice) {
-          const range = maxPrice - minPrice;
-          if (range <= 0 || !isFinite(range)) { // 価格変動がない、またはデータがない場合
-              const center = minPrice || 1000; // データがない場合はデフォルト値
-              // 軸の変動幅を確保
+          if (minPrice >= maxPrice) { 
+              const center = minPrice || 1000; 
               const interval = Math.max(100, Math.floor(center * 0.05));
               return { scaleMin: center - interval, scaleMax: center + interval };
           }
           
-          // キリの良い間隔を計算
-          let niceInterval = 1;
-          const roughInterval = range / 5; // 約5つの目盛り
-          const power = Math.pow(10, Math.floor(Math.log10(roughInterval)));
+          const range = maxPrice - minPrice;
+          const roughInterval = range / 4;
+          const magnitude = Math.pow(10, Math.floor(Math.log10(roughInterval)));
+          let interval;
           
-          if (roughInterval > 5 * power) niceInterval = 10 * power;
-          else if (roughInterval > 2 * power) niceInterval = 5 * power;
-          else if (roughInterval > 1 * power) niceInterval = 2 * power;
-          else niceInterval = 1 * power;
+          const normalized = roughInterval / magnitude;
+          if (normalized <= 1.5) interval = 1 * magnitude;
+          else if (normalized <= 3.5) interval = 2 * magnitude;
+          else if (normalized <= 7.5) interval = 5 * magnitude;
+          else interval = 10 * magnitude;
           
-          const scaleMin = Math.floor(minPrice / niceInterval) * niceInterval;
-          const scaleMax = Math.ceil(maxPrice / niceInterval) * niceInterval;
+          const scaleMin = Math.floor(minPrice / interval) * interval;
+          const scaleMax = Math.ceil(maxPrice / interval) * interval;
+          
           return { scaleMin, scaleMax };
       }
 
-      /**
-       * Chart.jsインスタンスを初期化または更新する
-       */
+      // --- Chart.js 関連 ---
+
       function initializeChart(chartData, scaleMin, scaleMax, chartRangeMs) {
-          const canvas = document.getElementById('combined-chart');
-          const ctx = canvas ? canvas.getContext('2d') : null;
-          
-          if (!ctx) return;
+          const ctx = document.getElementById('combined-chart').getContext('2d');
           
           if (stockChart) {
-              // 既にインスタンスが存在する場合はデータを更新
               stockChart.data.datasets = chartData.datasets;
               stockChart.options.scales.y.min = scaleMin;
               stockChart.options.scales.y.max = scaleMax;
               stockChart.options.scales.x.min = Date.now() - chartRangeMs;
               stockChart.options.scales.x.max = Date.now();
-              stockChart.update('none'); // アニメーションなしで更新
+              stockChart.update('none');
               return;
           }
 
-          // 新しいインスタンスの作成
           stockChart = new Chart(ctx, {
               type: 'line',
               data: chartData,
@@ -283,86 +321,81 @@
                   responsive: true,
                   maintainAspectRatio: false,
                   animation: { duration: 0 },
-                  layout: { padding: { top: 10, bottom: 0 } },
                   plugins: {
-                      legend: { display: false }, // 凡例はカスタムHTMLで表示
-                      tooltip: { mode: 'index', intersect: false }
+                      legend: { display: false }, // カスタム凡例を使用するため非表示
+                      tooltip: { 
+                          mode: 'index', 
+                          intersect: false,
+                          bodyFont: { size: 13 }
+                      }
                   },
+                  layout: { padding: { left: 0, right: 10, top: 10, bottom: 0 } },
                   scales: {
                       x: {
                           type: 'time',
                           time: {
                               unit: 'minute',
-                              displayFormats: { minute: 'H:mm:ss' } // 秒単位まで表示
+                              displayFormats: { minute: 'H:mm' }
                           },
-                          min: Date.now() - chartRangeMs, // グラフの左端 (現在時刻 - 10分)
-                          max: Date.now(), // グラフの右端 (現在時刻)
-                          ticks: { 
-                              source: 'auto',
-                              autoSkip: true,
-                              maxTicksLimit: 5
-                          },
-                          title: { display: true, text: '時刻' }
+                          min: Date.now() - chartRangeMs,
+                          max: Date.now(),
+                          ticks: { source: 'auto', maxTicksLimit: 6 },
+                          grid: { display: false }
                       },
                       y: {
                           min: scaleMin,
                           max: scaleMax,
-                          title: { display: true, text: '株価 (¥)' },
+                          position: 'right', // Y軸を右側に配置
                           ticks: {
-                              callback: (value) => `¥${value.toLocaleString()}`,
-                              maxTicksLimit: 6,
-                              precision: 0
+                              callback: (value) => value.toLocaleString(),
+                              maxTicksLimit: 6
                           }
                       }
                   }
               }
           });
-          
-          // 初回ロード時、凡例のチェック状態を反映
-          stockChart.update();
       }
 
-      /**
-       * グラフのX軸/Y軸データをChart.js形式に変換し、更新をトリガーする
-       */
-      function updateChartData() {
+      function updateChartData(pricesSchedule) {
           const now = Date.now();
           const historyMs = HISTORY_MINUTES * 60 * 1000;
           
-          // 1. フィルタリングされた履歴データを取得
+          // フィルタリングされた履歴データ
           const filteredHistory = pricesSchedule.filter(entry => 
               entry.time_date.getTime() >= (now - historyMs) && entry.time_date.getTime() <= now
           );
 
-          if (filteredHistory.length === 0) {
-              const container = document.getElementById('chart-container-wrapper');
-              // データがない場合は、グラフを破壊してメッセージを表示
-              if (stockChart) { stockChart.destroy(); stockChart = null; } 
-              if (container.querySelector('canvas')) container.querySelector('canvas').remove();
-              // 新しいキャンバスを再構築
-              container.innerHTML = '<canvas id="combined-chart"></canvas><p class="text-center text-gray-500 py-10">表示する履歴データがありません。</p>';
-              return;
-          }
+          if (filteredHistory.length === 0) return;
 
-          // 2. 表示対象の銘柄（ACTIVE_STOCKS）の最小・最大価格を特定
+          // 表示対象の銘柄の価格範囲を特定
           let activePrices = filteredHistory.flatMap(entry => entry.prices
               .filter(p => ACTIVE_STOCKS.has(p.name))
               .map(p => p.price)
           );
           
-          let minPrice = activePrices.length > 0 ? Math.min(...activePrices) : 0;
-          let maxPrice = activePrices.length > 0 ? Math.max(...activePrices) : 100;
-          
-          // 3. Y軸スケールをキリの良い数字に設定
+          // デフォルト範囲の設定
+          let minPrice = 0, maxPrice = 100;
+          if (activePrices.length > 0) {
+              minPrice = Math.min(...activePrices);
+              maxPrice = Math.max(...activePrices);
+          } else {
+             // 選択なしの場合は全データの範囲をとりあえず使う（グラフは空になる）
+             let allPrices = filteredHistory.flatMap(entry => entry.prices.map(p => p.price));
+             if(allPrices.length > 0) {
+                 minPrice = Math.min(...allPrices);
+                 maxPrice = Math.max(...allPrices);
+             }
+          }
+
           const { scaleMin, scaleMax } = getYAxisScale(minPrice, maxPrice);
 
-          // 4. データセットを構築 (チェック状態をhiddenに反映)
+          // データセット構築
           const stockNames = pricesSchedule.length > 0 ? pricesSchedule[0].prices.map(p => p.name) : [];
           const datasets = stockNames.map(name => {
               const dataPoints = filteredHistory.map(entry => {
                   const priceEntry = entry.prices.find(p => p.name === name);
                   return {
-                      x: entry.time_date.getTime(), // Chart.jsではミリ秒で渡す
+                      x: entry.time_date.getTime(),
                       y: priceEntry ? priceEntry.price : null 
                   };
               });
@@ -373,314 +406,231 @@
                   borderColor: STOCK_COLORS[name],
                   backgroundColor: STOCK_COLORS[name],
                   borderWidth: 2,
-                  pointRadius: 3,
+                  pointRadius: 0, // 点を消して線のみに
+                  pointHoverRadius: 4,
                   fill: false,
                   tension: 0.1,
-                  // LocalStorageから読み込んだ状態を hidden に反映
                   hidden: !ACTIVE_STOCKS.has(name) 
               };
           });
 
-          const chartData = { datasets };
-          initializeChart(chartData, scaleMin, scaleMax, historyMs);
+          initializeChart({ datasets }, scaleMin, scaleMax, historyMs);
       }
-      
-      /**
-       * 凡例（レジェンド）を描画する
-       */
-      function drawLegend(stockNames) {
-          const legendContainer = document.getElementById('chart-legend');
-          legendContainer.innerHTML = '';
-          
-          stockNames.forEach(stockName => {
-              const color = STOCK_COLORS[stockName] || '#000000';
-              const legendItem = document.createElement('label');
-              legendItem.className = 'legend-item';
-              legendItem.setAttribute('for', `check-${stockName}`);
-              
-              // チェックボックスとラベルを生成
-              legendItem.innerHTML = `
-                  <input type="checkbox" id="check-${stockName}" data-stock-name="${stockName}"
-                         ${ACTIVE_STOCKS.has(stockName) ? 'checked' : ''}
-                         style="accent-color: ${color};"
-                         class="mr-2 h-4 w-4 rounded cursor-pointer border-gray-400 focus:ring-indigo-500">
-                  <span style="background-color: ${color}; width:10px; height:10px; border-radius:50%; margin-right:4px;"></span>
-                  <span class="truncate">${stockName}</span>
-              `;
-              legendContainer.appendChild(legendItem);
-              
-              // イベントリスナーの追加
-              legendItem.querySelector('input').addEventListener('change', (e) => {
-                  const name = e.target.dataset.stockName;
-                  const isChecked = e.target.checked;
-                  
-                  if (isChecked) {
-                      ACTIVE_STOCKS.add(name);
-                  } else {
-                      ACTIVE_STOCKS.delete(name);
-                  }
-                  
-                  // LocalStorageに保存
-                  saveActiveStocks(ACTIVE_STOCKS); 
 
-                  // グラフの表示/非表示を切り替え、Y軸を再計算
-                  if (stockChart) {
-                      const datasetIndex = stockChart.data.datasets.findIndex(ds => ds.label === name);
-                      if (datasetIndex > -1) {
-                          // Chart.jsの hidden プロパティを更新
-                          stockChart.data.datasets[datasetIndex].hidden = !isChecked;
-                      }
-                  }
-                  // グラフの描画データを更新し、Y軸を再計算
-                  updateChartData();
+      // --- 凡例・リスト表示関連 ---
+
+      /**
+       * 凡例リスト（株価・変化率含む）を初期化または更新する
+       */
+      function updateLegendList(currentPrices, previousPrices) {
+          const listContainer = document.getElementById('legend-list');
+          
+          // 初回作成
+          if (listContainer.children.length === 0 && currentPrices.length > 0) {
+              currentPrices.forEach(item => {
+                  const name = item.name;
+                  const color = STOCK_COLORS[name] || '#000';
+                  
+                  const div = document.createElement('div');
+                  div.className = `legend-item ${ACTIVE_STOCKS.has(name) ? '' : 'inactive'}`;
+                  div.id = `legend-item-${name}`;
+                  div.onclick = () => toggleStock(name);
+                  
+                  div.innerHTML = `
+                      <div class="legend-left">
+                          <span class="legend-color" style="background-color: ${color};"></span>
+                          <span class="legend-name">${name}</span>
+                      </div>
+                      <div class="legend-right">
+                          <div class="legend-price" id="price-${name}">--</div>
+                          <div class="legend-change" id="change-${name}">--</div>
+                      </div>
+                  `;
+                  listContainer.appendChild(div);
               });
+          }
+
+          // 値の更新
+          currentPrices.forEach(item => {
+              const name = item.name;
+              const priceEl = document.getElementById(`price-${name}`);
+              const changeEl = document.getElementById(`change-${name}`);
+              const itemEl = document.getElementById(`legend-item-${name}`);
+              
+              if (!priceEl) return;
+
+              // 現在価格
+              const currentPriceStr = `¥${item.price.toLocaleString()}`;
+              if (priceEl.textContent !== currentPriceStr) {
+                  priceEl.textContent = currentPriceStr;
+                  // フラッシュアニメーション
+                  const prevPriceVal = previousPrices ? (previousPrices.find(p => p.name === name)?.price || item.price) : item.price;
+                  if (item.price > prevPriceVal) itemEl.classList.add('flash-up');
+                  else if (item.price < prevPriceVal) itemEl.classList.add('flash-down');
+                  
+                  setTimeout(() => itemEl.classList.remove('flash-up', 'flash-down'), 1000);
+              }
+
+              // 変化率
+              let prevPrice = previousPrices ? previousPrices.find(p => p.name === name)?.price : item.price;
+              if (!prevPrice) prevPrice = item.price;
+              
+              const diff = item.price - prevPrice;
+              const ratio = prevPrice !== 0 ? (diff / prevPrice * 100).toFixed(2) : "0.00";
+              const sign = diff > 0 ? "+" : "";
+              
+              changeEl.textContent = `${sign}${diff} (${sign}${ratio}%)`;
+              
+              // 色付け
+              changeEl.className = "legend-change"; // reset
+              if (diff > 0) changeEl.classList.add("text-green");
+              else if (diff < 0) changeEl.classList.add("text-red");
+              else changeEl.classList.add("text-gray-500");
           });
       }
 
-      /**
-       * イベント履歴を表示する
-       */
+      function toggleStock(name) {
+          if (ACTIVE_STOCKS.has(name)) {
+              ACTIVE_STOCKS.delete(name);
+          } else {
+              ACTIVE_STOCKS.add(name);
+          }
+          saveActiveStocks(ACTIVE_STOCKS);
+          
+          // UI更新
+          const itemEl = document.getElementById(`legend-item-${name}`);
+          if (itemEl) {
+              if (ACTIVE_STOCKS.has(name)) itemEl.classList.remove('inactive');
+              else itemEl.classList.add('inactive');
+          }
+
+          // チャート更新 (hiddenフラグ切替)
+          if (stockChart) {
+              const datasetIndex = stockChart.data.datasets.findIndex(ds => ds.label === name);
+              if (datasetIndex > -1) {
+                  stockChart.data.datasets[datasetIndex].hidden = !ACTIVE_STOCKS.has(name);
+              }
+          }
+          updateChartData(pricesSchedule); // Y軸スケール再計算のため呼び出し
+      }
+
       function updateEventHistory(events) {
           const list = document.getElementById('event-list');
-          list.innerHTML = ''; // リセット
+          list.innerHTML = '';
           
           if (events.length === 0) {
-              list.innerHTML = '<li class="text-gray-500">現在、発生済みのイベントはありません。</li>';
+              list.innerHTML = '<li class="text-gray-500 text-sm">イベント待機中...</li>';
               return;
           }
           
-          // イベント履歴の表示件数 (EVENT_HISTORY_COUNT) に制限
           events.slice(0, EVENT_HISTORY_COUNT).forEach(event => {
-              // 時刻を秒単位まで表示
               const time = event.time_date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-              const listItem = document.createElement('li');
-              listItem.className = 'border-l-4 border-indigo-400 pl-3 text-gray-700';
-              listItem.innerHTML = `
-                  <span class="font-semibold">${event.event_title}</span><br>
-                  <span class="text-xs text-gray-500">${time} 発生</span>
+              const li = document.createElement('li');
+              li.className = 'event-item';
+              li.innerHTML = `
+                  <div class="event-title">${event.event_title}</div>
+                  <div class="event-time">${time} 発生</div>
               `;
-              list.appendChild(listItem);
+              list.appendChild(li);
           });
       }
-      
-      /**
-       * 取得したデータに基づいてHTMLを更新する (銘柄カードの描画)
-       */
-      function updateDisplay(currentPrices, previousPrices, recentEvents) {
-        const board = document.getElementById('price-board');
-        
-        // イベント履歴の更新
-        updateEventHistory(recentEvents);
 
-        // 初回表示時の処理
-        if (board.children.length === 0 || board.children[0].id === 'loading') { board.innerHTML = ''; }
+      // --- データロードとメインループ ---
 
-        currentPrices.forEach(item => {
-          const formattedPrice = item.price.toLocaleString();
-          const safeName = item.name.replace(/[^a-zA-Z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/g, ''); 
-          const priceId = `price-${safeName}`;
-          
-          let existingElement = document.getElementById(priceId);
-          let prevPrice = previousPrices ? previousPrices.find(p => p.name === item.name)?.price : item.price;
-          prevPrice = prevPrice || item.price; 
-          
-          // 増減額と割合の計算
-          const changeAmount = item.price - prevPrice;
-          const changeRatio = prevPrice > 0 ? (changeAmount / prevPrice) * 100 : 0;
-          const sign = changeAmount >= 0 ? '▲' : '▼';
-          const colorClass = changeAmount >= 0 ? 'text-green-600' : 'text-red-600';
-
-          if (!existingElement) {
-              const newDiv = document.createElement('div');
-              newDiv.id = priceId;
-              // ★★★ 銘柄カードの均等化 CSS クラス ★★★
-              newDiv.className = "card bg-white p-5 rounded-xl border border-gray-200 hover:border-indigo-400 transition duration-150 flex flex-col justify-center"; 
-              newDiv.innerHTML = `
-                  <h2 class="text-xl font-semibold text-gray-600 mb-2">${item.name}</h2>
-                  <div class="price-details">
-                    <p class="text-4xl font-bold text-indigo-600 price-value">¥ ${formattedPrice}</p>
-                    <div class="text-right">
-                        <p class="text-lg font-bold ${colorClass}">
-                            ${sign} ${changeAmount.toLocaleString()}
-                        </p>
-                        <p class="text-sm ${colorClass}">
-                            (${changeRatio.toFixed(2)}%)
-                        </p>
-                    </div>
-                  </div>
-              `;
-              board.appendChild(newDiv);
-
-          } else {
-              // 既存要素の更新
-              const priceSpan = existingElement.querySelector('.price-value');
-              const changeAmountElement = existingElement.querySelector('.text-lg');
-              const changeRatioElement = existingElement.querySelector('.text-sm');
-              
-              if (priceSpan.textContent !== `¥ ${formattedPrice}`) {
-                  priceSpan.classList.add('animate-pulse-once');
-                  priceSpan.textContent = `¥ ${formattedPrice}`;
-                  setTimeout(() => priceSpan.classList.remove('animate-pulse-once'), 1000); 
-              }
-              
-              // 変動情報を更新
-              [changeAmountElement, changeRatioElement].forEach(el => {
-                  el.classList.remove('text-green-600', 'text-red-600');
-                  el.classList.add(colorClass);
-              });
-              changeAmountElement.textContent = `${sign} ${changeAmount.toLocaleString()}`;
-              changeRatioElement.textContent = `(${changeRatio.toFixed(2)}%)`;
-          }
-        });
-        
-        document.getElementById('last-updated').textContent = new Date().toLocaleTimeString('ja-JP');
-      }
-
-      // --- LocalStorage Utility Functions ---
-      
-      /**
-       * LocalStorageからアクティブな銘柄を読み込む
-       */
       function loadActiveStocks(allStockNames) {
           const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
           if (stored) {
               try {
-                  const storedArray = JSON.parse(stored);
-                  if (Array.isArray(storedArray)) {
-                      ACTIVE_STOCKS = new Set(storedArray);
+                  const arr = JSON.parse(stored);
+                  if (Array.isArray(arr)) {
+                      ACTIVE_STOCKS = new Set(arr);
                       return;
                   }
-              } catch (e) {
-                  console.error("Failed to parse stored active stocks:", e);
-              }
+              } catch (e) { console.error(e); }
           }
-          
-          // 初回またはデータ不正の場合、全てアクティブにする
-          allStockNames.forEach(name => ACTIVE_STOCKS.add(name));
+          // デフォルト全選択
+          allStockNames.forEach(n => ACTIVE_STOCKS.add(n));
       }
 
-      /**
-       * LocalStorageにアクティブな銘柄を保存する
-       */
-      function saveActiveStocks(activeSet) {
+      function saveActiveStocks(set) {
           try {
-              localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(Array.from(activeSet)));
+              localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(Array.from(set)));
+          } catch(e) {}
+      }
+
+      async function loadSchedule() {
+          const loadingMsg = document.getElementById('loading-message');
+          try {
+              const res = await fetch(JSON_FILE_URL);
+              if (!res.ok) throw new Error(res.statusText);
+              const data = await res.json();
+
+              if (!data || !data[0] || !data[0].prices_schedule) throw new Error("Invalid JSON format");
+
+              pricesSchedule = data[0].prices_schedule;
+              eventsSchedule = data[0].events_schedule;
+
+              // 日付変換とソート
+              [pricesSchedule, eventsSchedule].forEach(arr => {
+                  arr.forEach(d => d.time_date = new Date(d.time_absolute_iso));
+                  arr.sort((a, b) => a.time_date - b.time_date);
+              });
+
+              // 初期化処理
+              if (loadingMsg) loadingMsg.remove();
+              
+              const allNames = pricesSchedule.length > 0 ? pricesSchedule[0].prices.map(p => p.name) : [];
+              loadActiveStocks(allNames);
+              
+              checkAndUpdate();
+              setInterval(checkAndUpdate, UPDATE_INTERVAL);
+
           } catch (e) {
-              console.error("Failed to save active stocks:", e);
+              if (loadingMsg) {
+                  loadingMsg.textContent = "データ読み込みエラー";
+                  loadingMsg.classList.add("text-red-500");
+              }
+              console.error(e);
           }
       }
 
-      // --- CORE LOGIC ---
-
-      /**
-       * 現在時刻に基づいて表示を更新するメインロジック
-       */
       function checkAndUpdate() {
-          if (pricesSchedule.length === 0) return; 
-          
+          if (pricesSchedule.length === 0) return;
           const now = new Date();
           
+          // 最新データの特定
           let latestPriceData = null;
           let previousPriceData = null;
-          let recentPriceHistory = [];
           
-          // 価格スケジュール全体をループし、過去のデータを保持
-          const historyStartMs = now.getTime() - (HISTORY_MINUTES * 60 * 1000);
-
+          // 時間軸に沿って現在時刻以下の最新データを探す
           for (let i = 0; i < pricesSchedule.length; i++) {
-            const priceEntry = pricesSchedule[i];
-            const timeMs = priceEntry.time_date.getTime();
-            
-            // 直近N分間の履歴抽出
-            if (timeMs >= historyStartMs && timeMs <= now.getTime()) {
-                recentPriceHistory.push(priceEntry);
-            }
-
-            // 最新の価格特定
-            if (timeMs <= now.getTime()) {
-              previousPriceData = latestPriceData;
-              latestPriceData = priceEntry.prices;
-            } else {
-              break; 
-            }
-          }
-
-          // 2. イベント履歴の特定
-          const recentEvents = [];
-          for (let i = eventsSchedule.length - 1; i >= 0; i--) {
-              const eventEntry = eventsSchedule[i];
-              if (eventEntry.time_date.getTime() <= now.getTime()) {
-                  recentEvents.push(eventEntry);
-                  if (recentEvents.length >= EVENT_HISTORY_COUNT) break;
+              const entry = pricesSchedule[i];
+              if (entry.time_date <= now) {
+                  previousPriceData = latestPriceData; // 一つ前を保存
+                  latestPriceData = entry.prices;
+              } else {
+                  break;
               }
           }
-          
-          // 3. 画面表示の更新
+
+          // イベント履歴
+          const recentEvents = eventsSchedule.filter(e => e.time_date <= now).reverse();
+
           if (latestPriceData) {
-              updateDisplay(latestPriceData, previousPriceData, recentEvents);
-              updateChartData(); // 統合グラフの描画
+              // 画面更新
+              updateLegendList(latestPriceData, previousPriceData);
+              updateEventHistory(recentEvents);
+              updateChartData(pricesSchedule);
+              document.getElementById('last-updated').textContent = new Date().toLocaleTimeString('ja-JP');
           } else {
-              // ゲーム開始前
-              document.getElementById('price-board').innerHTML = '<div class="col-span-1 md:col-span-2 text-center text-gray-500 py-10">ゲーム開始時刻までお待ちください。</div>';
-              updateEventHistory([]);
+              // まだ開始していない場合など
+              document.getElementById('loading-message').textContent = "ゲーム開始前です";
           }
       }
 
-      /**
-       * 外部JSONファイルを読み込み、初期化する (メイン)
-       */
-      async function loadSchedule() {
-        const loadingElement = document.getElementById('loading');
-        
-        try {
-            loadingElement.textContent = 'スケジュールデータをダウンロード中...';
-            const response = await fetch(JSON_FILE_URL);
-            
-            if (!response.ok) {
-                throw new Error(`ファイルアクセスエラー: JSONファイルの読み込みに失敗しました (${response.status} ${response.statusText})。`);
-            }
-            
-            const data = await response.json();
-            
-            // ★★★ 修正箇所: data[0] からデータを安全に抽出 ★★★
-            if (!data || !Array.isArray(data) || !data[0] || !data[0].prices_schedule || !data[0].events_schedule) {
-                 throw new Error("JSONデータの構造が不正です。prices_scheduleまたはevents_scheduleが見つかりません。");
-            }
-
-            pricesSchedule = data[0].prices_schedule;
-            eventsSchedule = data[0].events_schedule;
-        
-            // ISO文字列をDateオブジェクトに変換し、ソートする
-            [pricesSchedule, eventsSchedule].forEach(schedule => {
-                schedule.forEach(entry => {
-                    entry.time_date = new Date(entry.time_absolute_iso);
-                });
-                schedule.sort((a, b) => a.time_date.getTime() - b.time_date.getTime()); 
-            });
-            
-            // ロード完了
-            if (loadingElement) loadingElement.remove();
-            
-            const allStockNames = pricesSchedule.length > 0 ? pricesSchedule[0].prices.map(p => p.name) : [];
-            
-            // 状態を読み込み、凡例を描画
-            loadActiveStocks(allStockNames); 
-            drawLegend(allStockNames); 
-
-            checkAndUpdate();
-            setInterval(checkAndUpdate, UPDATE_INTERVAL);
-
-        } catch (error) {
-            // エラーメッセージをユーザーに表示
-            loadingElement.textContent = `❌ データロードエラー: ${error.message}. コンソールを確認してください。`;
-            loadingElement.classList.remove('text-gray-500');
-            loadingElement.classList.add('text-red-500', 'font-bold');
-            console.error("致命的なロードエラー:", error);
-        }
-      }
-      
-      // スケジュールをロードして処理を開始
+      // スタート
       loadSchedule();
+
     })();
   </script>
 </body>
