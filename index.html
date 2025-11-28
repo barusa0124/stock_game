@@ -201,7 +201,7 @@
     (function() {
       // --- 設定 ---
       const UPDATE_INTERVAL = 5000; 
-      const EVENT_HISTORY_COUNT = 3; 
+      const EVENT_HISTORY_COUNT = 10; 
       const LOCAL_STORAGE_KEY = 'active_stocks_v2'; 
       const JSON_FILE_URL = './stock_schedule.json'; // 本番用JSONファイル
 
@@ -210,8 +210,9 @@
           { label: '直近 10分', value: 10 },
           { label: '直近 30分', value: 30 },
           { label: '直近 1時間', value: 60 },
+          { label: '直近 6時間', value: 360 }
       ];
-      let currentHistoryMinutes = 10; 
+      let currentHistoryMinutes = 30; 
 
       let pricesSchedule = []; 
       let eventsSchedule = []; 
